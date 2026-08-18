@@ -74,6 +74,8 @@ const loginLimiter = rateLimit({
 });
 app.use('/api/auth/login', loginLimiter);
 
+// Root path has no page of its own — send visitors straight to login.
+app.get('/', (req, res) => res.redirect('/login.html'));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { index: false, dotfiles: 'deny' }));
 app.use(express.static(path.join(__dirname, 'public')));
 

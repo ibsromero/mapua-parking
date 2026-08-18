@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Support — Mapúa Parking</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<div class="navbar">
+  <a class="brand" href="/dashboard.html">Mapúa Parking</a>
+  <nav>
+    <a href="/dashboard.html">Dashboard</a>
+    <a href="/reservations.html">Reservations</a>
+    <a href="/history.html">History</a>
+    <a href="/support.html" class="active">Support</a>
+  </nav>
+  <div><a href="#" onclick="logout(); return false;" class="btn">Logout</a></div>
+</div>
+
+<div class="container" style="max-width:700px;">
+  <h1>Support</h1>
+  <p class="muted">Ran into an issue? Submit a ticket and we'll take a look.</p>
+
+  <div class="card" style="margin-bottom:24px;">
+    <form id="ticketForm">
+      <div class="field">
+        <label>Category</label>
+        <select id="category" required>
+          <option value="Sticker Issue">Sticker Issue</option>
+          <option value="Booking Error">Booking Error</option>
+          <option value="Payment Issue">Payment Issue</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Description</label>
+        <textarea id="description" rows="4" maxlength="1000" placeholder="Describe your issue…"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary">Submit Ticket</button>
+      <p id="ticketError" class="error-text" style="display:none;"></p>
+    </form>
+  </div>
+
+  <h3>Your Tickets</h3>
+  <div id="ticketList"><p class="muted">Loading…</p></div>
+</div>
+
+<script src="/js/common.js"></script>
+<script>
+function badgeClass(status) {
+  return { new: 'badge-pending', in_progress: 'badge-pending', waiting_for_user: 'badge-reserved', resolved: 'badge-completed' }[status] || 'badge-pending';
+}
+async function loadTickets() {
+  const { tickets } = await api('/api/support/mine');
+  const list = document.getElementById('ticketList');
+  if (!tickets.length) { list.innerHTML = '<p class="muted">No tickets yet.</p>'; return; }
+  list.innerHTML = tickets.map(t => `
+    <div class="card" style="margin-bottom:12px;">
+      <div style="display:flex;justify-content:space-between;">
+        <strong>${esc(t.category)}</strong>
+        <span class="badge ${badgeClass(t.status)}">${esc(t.status.replace('_',' '))}</span>
+      </div>
+      <p class="muted" style="margin:8px 0 0;">${esc(t.description || '')}</p>
+    </div>`).join('');
+}
+
+document.getElementById('ticketForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById('ticketError');
+  errEl.style.display = 'none';
+  try {
+    await api('/api/support', {
+      method: 'POST',
+      body: JSON.stringify({
+        category: document.getElementById('category').value,
+        description: document.getElementById('description').value
+      })
+    });
+    document.getElementById('description').value = '';
+    loadTickets();
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+  }
+});
+
+(async function () {
+  const user = await requireAuth('user');
+  if (!user) return;
+  loadTickets();
+})();
+</script>
+</body>
+</html>

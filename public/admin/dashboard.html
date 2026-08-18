@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Admin Dashboard — Mapúa Parking</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<div class="sidebar">
+  <div class="brand">🅿️ Admin<br/><span style="font-size:12px;font-weight:400;color:var(--text-muted);">Management Portal</span></div>
+  <nav>
+    <a href="/admin/dashboard.html" class="active">Dashboard</a>
+    <a href="/admin/applications.html">App Reviews</a>
+    <a href="/admin/facilities.html">Facilities</a>
+    <a href="/admin/support.html">Support</a>
+  </nav>
+  <div style="margin-top:40px;">
+    <a href="#" onclick="logout(); return false;" style="display:block;padding:12px 20px;color:var(--text);text-decoration:none;font-weight:600;font-size:14px;">Logout</a>
+  </div>
+</div>
+
+<div class="admin-layout">
+  <h1>Dashboard Overview</h1>
+  <p class="muted">Mapúa University — Main Campus Parking Status</p>
+
+  <div class="grid-3" style="margin:24px 0;">
+    <div class="card stat-card">
+      <h3>Total Occupancy</h3>
+      <div class="value" id="occPct">—</div>
+      <p class="muted" id="occDetail" style="margin:4px 0 0;font-size:13px;"></p>
+    </div>
+    <div class="card stat-card">
+      <h3>Active Reservations</h3>
+      <div class="value" id="activeCount">—</div>
+    </div>
+    <div class="card stat-card">
+      <h3>Pending Applications</h3>
+      <div class="value" id="pendingCount">—</div>
+      <a href="/admin/applications.html" style="font-size:13px;">Review All →</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Recent Activity</h3>
+    <div id="recentActivity"><p class="muted">Loading…</p></div>
+  </div>
+</div>
+
+<script src="/js/common.js"></script>
+<script>
+(async function () {
+  const user = await requireAuth('admin');
+  if (!user) return;
+  try {
+    const data = await api('/api/admin/overview');
+    document.getElementById('occPct').textContent = data.occupancy_pct + '%';
+    document.getElementById('occDetail').textContent = `${data.slots_occupied} of ${data.slots_total} slots occupied`;
+    document.getElementById('activeCount').textContent = data.active_reservations;
+    document.getElementById('pendingCount').textContent = data.pending_applications;
+
+    const box = document.getElementById('recentActivity');
+    if (!data.recent_activity.length) {
+      box.innerHTML = '<p class="muted">No recent entry/exit activity logged yet.</p>';
+    } else {
+      box.innerHTML = data.recent_activity.map(a => `
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);">
+          <div><strong>Plate: ${esc(a.plate_no || '—')}</strong><br/><span class="muted" style="font-size:13px;">${esc(a.action)}</span></div>
+          <span class="muted" style="font-size:13px;">${new Date(a.logged_at).toLocaleString()}</span>
+        </div>`).join('');
+    }
+  } catch (e) {
+    document.getElementById('recentActivity').innerHTML = `<p class="error-text">${esc(e.message)}</p>`;
+  }
+})();
+</script>
+</body>
+</html>

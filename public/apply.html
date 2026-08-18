@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Parking Lot Application — Mapúa Parking</title>
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  .steps { display:flex; justify-content:space-between; max-width:500px; margin:0 auto 32px; position:relative; }
+  .step { text-align:center; font-size:13px; font-weight:700; color:var(--text-muted); }
+  .step .circle { width:32px; height:32px; border-radius:50%; background:#e5e7eb; color:#fff; display:flex; align-items:center; justify-content:center; margin:0 auto 6px; font-weight:700; }
+  .step.active .circle, .step.done .circle { background: var(--maroon); }
+  .step.active { color: var(--maroon); }
+  .panel { display:none; }
+  .panel.active { display:block; }
+  .upload-box { border:2px dashed var(--border); border-radius:10px; padding:20px; text-align:center; color:var(--text-muted); cursor:pointer; background:#fafafa; }
+  .upload-box.filled { border-color:var(--green); color:var(--green); }
+</style>
+</head>
+<body>
+<div class="navbar"><a class="brand" href="/apply.html">🅿️ Parking Lot Application</a></div>
+
+<div class="container" style="max-width:800px;">
+  <p style="text-align:center;" class="muted">Complete the form below to apply for your entry at parking lot.</p>
+
+  <div class="steps">
+    <div class="step active" data-step="1"><div class="circle">1</div>Applicant</div>
+    <div class="step" data-step="2"><div class="circle">2</div>Vehicle</div>
+    <div class="step" data-step="3"><div class="circle">3</div>Rules</div>
+    <div class="step" data-step="4"><div class="circle">4</div>Review</div>
+  </div>
+
+  <form id="applyForm">
+    <!-- Step 1: Applicant -->
+    <div class="panel active card" data-panel="1">
+      <h3>1. Applicant Information</h3>
+      <div class="field">
+        <label>Applicant Is</label>
+        <select id="applicant_type" required>
+          <option value="student">Student</option>
+          <option value="faculty">Faculty</option>
+          <option value="non_teaching">Non-Teaching</option>
+        </select>
+      </div>
+      <div class="field"><label>Name of Applicant</label><input id="full_name" placeholder="Last Name, First Name, M.I." required maxlength="150" /></div>
+      <div class="field"><label>ID Number</label><input id="id_number" placeholder="e.g. 2021105432" required maxlength="20" /></div>
+      <div class="field"><label>Address</label><input id="address" placeholder="Complete Home Address" maxlength="200" /></div>
+      <div class="grid-2">
+        <div class="field"><label>Course & Year (if student)</label><input id="course_year" placeholder="e.g. BSCS - 3rd Year" maxlength="100" /></div>
+        <div class="field"><label>Contact No.</label><input id="contact_no" placeholder="09XX-XXX-XXXX" maxlength="30" /></div>
+      </div>
+      <div class="field"><label>Email Address</label><input id="email" type="email" placeholder="you@mymail.mapua.edu.ph" maxlength="150" /></div>
+      <div class="field"><label>Password</label><input id="password" type="password" placeholder="Create a password" required minlength="8" maxlength="200" /></div>
+
+      <h3>Required Documents</h3>
+      <div class="field">
+        <label>Official Receipt / Certificate of Registration (OR/CR)</label>
+        <div class="upload-box" data-for="or_cr_file">Drag & drop or click to upload (PDF, JPG, PNG)</div>
+        <input type="file" id="or_cr_file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" />
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Driver's License</label>
+          <div class="upload-box" data-for="drivers_license_file">Upload File</div>
+          <input type="file" id="drivers_license_file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" />
+        </div>
+        <div class="field">
+          <label>University ID</label>
+          <div class="upload-box" data-for="university_id_file">Upload File</div>
+          <input type="file" id="university_id_file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" />
+        </div>
+      </div>
+      <div style="text-align:right;"><button type="button" class="btn btn-primary" onclick="goStep(2)">Next</button></div>
+    </div>
+
+    <!-- Step 2: Vehicle -->
+    <div class="panel card" data-panel="2">
+      <h3>Vehicle Details</h3>
+      <div class="grid-3">
+        <div class="field"><label>Plate No.</label><input id="plate_no" placeholder="ABC 1234" required maxlength="15" /></div>
+        <div class="field"><label>Make</label><input id="make" placeholder="e.g. Toyota" maxlength="50" /></div>
+        <div class="field"><label>Model / Series</label><input id="model" placeholder="e.g. Vios 1.3 E" maxlength="50" /></div>
+      </div>
+      <div class="grid-3">
+        <div class="field"><label>Year</label><input id="year" placeholder="YYYY" maxlength="4" /></div>
+        <div class="field"><label>Color</label><input id="color" placeholder="Color" maxlength="30" /></div>
+        <div class="field"><label>Trim</label><input id="trim" placeholder="Trim" maxlength="30" /></div>
+      </div>
+      <h3>Registered Owner Information</h3>
+      <div class="field"><label>Full Name of Registered Owner</label><input id="owner_name" placeholder="Last Name, First Name, M.I." maxlength="150" /></div>
+      <div class="field"><label>Complete Address</label><input id="owner_address" placeholder="House No., Street, Barangay, City/Province" maxlength="200" /></div>
+      <div class="field">
+        <label>Relation to Applicant</label>
+        <select id="relation_to_applicant">
+          <option value="self">Self</option>
+          <option value="parent">Parent</option>
+          <option value="sibling">Sibling</option>
+          <option value="spouse">Spouse</option>
+          <option value="relative">Other Relative</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <button type="button" class="btn" onclick="goStep(1)">Back</button>
+        <button type="button" class="btn btn-primary" onclick="goStep(3)">Next</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Rules -->
+    <div class="panel card" data-panel="3">
+      <h3>Rules & Regulations</h3>
+      <div class="alert alert-info">
+        By submitting this application, you confirm that you have read, understood, and agree to abide by the Mapúa University Parking Rules and Regulations. Any violation may result in the revocation of parking privileges.
+      </div>
+      <label style="display:flex;align-items:center;gap:10px;margin-top:16px;font-weight:400;text-transform:none;">
+        <input type="checkbox" id="rules_acknowledged" style="width:auto;" required /> I have read and agree to the rules and regulations.
+      </label>
+      <div style="display:flex;justify-content:space-between;margin-top:20px;">
+        <button type="button" class="btn" onclick="goStep(2)">Back</button>
+        <button type="button" class="btn btn-primary" onclick="goStep(4)">Next</button>
+      </div>
+    </div>
+
+    <!-- Step 4: Review -->
+    <div class="panel card" data-panel="4">
+      <h3>Review Application</h3>
+      <p class="muted">Please verify all information before submitting.</p>
+      <div id="reviewSummary"></div>
+      <div class="alert alert-warning" style="margin:20px 0;">
+        Once submitted, you can settle your term-based parking fee at the University Registrar or via the Online Payment Portal. Your sticker will be issued upon payment verification.
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <button type="button" class="btn" onclick="goStep(3)">Back</button>
+        <button type="submit" class="btn btn-primary" id="submitBtn">Submit Application</button>
+      </div>
+      <p id="applyError" class="error-text" style="display:none;"></p>
+      <p id="applySuccess" style="display:none;color:var(--green);font-weight:600;margin-top:12px;"></p>
+    </div>
+  </form>
+</div>
+
+<script src="/js/common.js"></script>
+<script>
+const files = {};
+document.querySelectorAll('.upload-box').forEach(box => {
+  box.addEventListener('click', () => document.getElementById(box.dataset.for).click());
+});
+['or_cr_file', 'drivers_license_file', 'university_id_file'].forEach(id => {
+  document.getElementById(id).addEventListener('change', (e) => {
+    const box = document.querySelector(`.upload-box[data-for="${id}"]`);
+    if (e.target.files[0]) {
+      files[id] = e.target.files[0];
+      box.textContent = `✓ ${e.target.files[0].name}`;
+      box.classList.add('filled');
+    }
+  });
+});
+
+function goStep(n) {
+  document.querySelectorAll('.step').forEach(s => {
+    const step = Number(s.dataset.step);
+    s.classList.toggle('active', step === n);
+    s.classList.toggle('done', step < n);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', Number(p.dataset.panel) === n));
+  if (n === 4) renderReview();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function val(id) { return document.getElementById(id).value; }
+
+function renderReview() {
+  document.getElementById('reviewSummary').innerHTML = `
+    <div class="grid-2">
+      <div>
+        <strong>Applicant Info</strong>
+        <p>${esc(val('full_name'))}<br/>${esc(val('id_number'))}<br/>${esc(val('course_year'))}<br/>${esc(val('email'))}</p>
+      </div>
+      <div>
+        <strong>Vehicle Info</strong>
+        <p>${esc(val('plate_no'))} — ${esc(val('make'))} ${esc(val('model'))}<br/>${esc(val('color'))}, ${esc(val('year'))}</p>
+      </div>
+    </div>`;
+}
+
+document.getElementById('applyForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById('applyError');
+  const okEl = document.getElementById('applySuccess');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+
+  try {
+    // 1. Register the applicant as a user (id_number + password become their login)
+    const reg = await api('/api/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        id_number: val('id_number'),
+        full_name: val('full_name'),
+        email: val('email'),
+        contact_no: val('contact_no'),
+        address: val('address'),
+        applicant_type: val('applicant_type'),
+        course_year: val('course_year'),
+        password: val('password')
+      })
+    });
+
+    // 2. Save the vehicle
+    const { vehicle } = await api('/api/vehicles', {
+      method: 'POST',
+      body: JSON.stringify({
+        plate_no: val('plate_no'), make: val('make'), model: val('model'), year: val('year'),
+        color: val('color'), trim: val('trim'), owner_name: val('owner_name'),
+        owner_address: val('owner_address'), relation_to_applicant: val('relation_to_applicant')
+      })
+    });
+
+    // 3. Submit the application with uploaded files
+    const fd = new FormData();
+    fd.append('vehicle_id', vehicle.id);
+    fd.append('rules_acknowledged', document.getElementById('rules_acknowledged').checked);
+    Object.entries(files).forEach(([key, file]) => fd.append(key, file));
+    await api('/api/applications', { method: 'POST', body: fd });
+
+    okEl.textContent = 'Application submitted! Redirecting to your dashboard…';
+    okEl.style.display = 'block';
+    setTimeout(() => (window.location.href = '/dashboard.html'), 1500);
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>

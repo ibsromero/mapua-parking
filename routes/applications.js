@@ -1,0 +1,123 @@
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const pool = require('../db/pool');
+const { requireLogin, requireAdmin } = require('../middleware/auth');
+
+const router = express.Router();
+
+const storage = multer.diskStorage({
+  destination: path.join(__dirname, '..', 'uploads'),
+  filename: (req, file, cb) => {
+    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}${path.extname(file.originalname)}`;
+    cb(null, unique);
+  }
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: (req, file, cb) => {
+    const ok = ['.pdf', '.jpg', '.jpeg', '.png'].includes(path.extname(file.originalname).toLowerCase());
+    cb(ok ? null : new Error('Only PDF, JPG, PNG files are allowed.'), ok);
+  }
+});
+
+const uploadFields = upload.fields([
+  { name: 'or_cr_file', maxCount: 1 },
+  { name: 'drivers_license_file', maxCount: 1 },
+  { name: 'university_id_file', maxCount: 1 }
+]);
+
+// POST /api/applications  (multipart form: vehicle_id + files + rules_acknowledged)
+router.post('/', requireLogin, uploadFields, async (req, res) => {
+  const { vehicle_id, rules_acknowledged } = req.body;
+  const files = req.files || {};
+  try {
+    const { rows } = await pool.query(
+      `INSERT INTO sticker_applications
+        (user_id, vehicle_id, or_cr_file, drivers_license_file, university_id_file, rules_acknowledged)
+       VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
+      [
+        req.session.user.id,
+        vehicle_id || null,
+        files.or_cr_file?.[0]?.filename || null,
+        files.drivers_license_file?.[0]?.filename || null,
+        files.university_id_file?.[0]?.filename || null,
+        rules_acknowledged === 'true' || rules_acknowledged === true
+      ]
+    );
+    res.status(201).json({ application: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to submit application.' });
+  }
+});
+
+// GET /api/applications/mine
+router.get('/mine', requireLogin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT a.*, v.plate_no, v.make, v.model
+       FROM sticker_applications a
+       LEFT JOIN vehicles v ON v.id = a.vehicle_id
+       WHERE a.user_id = $1 ORDER BY a.submitted_at DESC`,
+      [req.session.user.id]
+    );
+    res.json({ applications: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load applications.' });
+  }
+});
+
+// --- Admin ---
+
+// GET /api/applications  (admin: list all, optional ?status=pending)
+router.get('/', requireAdmin, async (req, res) => {
+  const { status } = req.query;
+  try {
+    const params = [];
+    let where = '';
+    if (status) {
+      params.push(status);
+      where = 'WHERE a.status = $1';
+    }
+    const { rows } = await pool.query(
+      `SELECT a.*, u.full_name AS applicant_name, u.id_number, u.applicant_type,
+              v.plate_no, v.make, v.model
+       FROM sticker_applications a
+       JOIN users u ON u.id = a.user_id
+       LEFT JOIN vehicles v ON v.id = a.vehicle_id
+       ${where}
+       ORDER BY a.submitted_at DESC`,
+      params
+    );
+    res.json({ applications: rows });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load applications.' });
+  }
+});
+
+// POST /api/applications/:id/decision  { decision: 'approved' | 'rejected' }
+router.post('/:id/decision', requireAdmin, async (req, res) => {
+  const { decision } = req.body;
+  if (!['approved', 'rejected'].includes(decision)) {
+    return res.status(400).json({ error: 'Decision must be approved or rejected.' });
+  }
+  try {
+    const { rows } = await pool.query(
+      `UPDATE sticker_applications
+       SET status = $1, reviewed_at = NOW(), reviewed_by = $2
+       WHERE id = $3 RETURNING *`,
+      [decision, req.session.user.id, req.params.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Application not found.' });
+    res.json({ application: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to update application.' });
+  }
+});
+
+module.exports = router;

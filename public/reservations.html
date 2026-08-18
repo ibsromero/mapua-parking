@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Book a Slot — Mapúa Parking</title>
+<link rel="stylesheet" href="/css/style.css" />
+<style>
+  .lot-tabs { display:flex; gap:8px; margin-bottom:20px; }
+  .lot-tab { padding:8px 16px; border-radius:8px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:600; }
+  .lot-tab.active { background:var(--maroon); color:#fff; border-color:var(--maroon); }
+  .slot-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .legend { display:flex; gap:16px; font-size:13px; color:var(--text-muted); margin-bottom:16px; }
+  .legend span { display:inline-flex; align-items:center; gap:6px; }
+  .dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+</style>
+</head>
+<body>
+<div class="navbar">
+  <a class="brand" href="/dashboard.html">Mapúa Parking</a>
+  <nav>
+    <a href="/dashboard.html">Dashboard</a>
+    <a href="/reservations.html" class="active">Reservations</a>
+    <a href="/history.html">History</a>
+    <a href="/support.html">Support</a>
+  </nav>
+  <div><a href="#" onclick="logout(); return false;" class="btn">Logout</a></div>
+</div>
+
+<div class="container" style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start;">
+  <div class="card">
+    <div class="lot-tabs" id="lotTabs"></div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--green);"></span>Available</span>
+      <span><span class="dot" style="background:#d1d5db;"></span>Reserved</span>
+      <span><span class="dot" style="background:var(--maroon);"></span>Selected</span>
+    </div>
+    <div class="slot-grid" id="slotGrid"><p class="muted">Loading slots…</p></div>
+  </div>
+
+  <div class="card">
+    <h3 style="margin-top:0;">Reservation Summary</h3>
+    <form id="bookForm">
+      <div class="field">
+        <label>Date</label>
+        <input type="date" id="reservation_date" required />
+      </div>
+      <div class="grid-2">
+        <div class="field"><label>Start Time</label><input type="time" id="start_time" value="08:00" required /></div>
+        <div class="field"><label>End Time</label><input type="time" id="end_time" value="17:00" required /></div>
+      </div>
+      <div class="field">
+        <label>Vehicle</label>
+        <select id="vehicle_id"><option value="">No vehicle on file yet</option></select>
+      </div>
+      <div class="alert alert-warning" style="margin-bottom:16px;">
+        <span>ℹ️</span>
+        <div>Selected slot: <strong id="selectedSlotLabel">None</strong></div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" id="reserveBtn" disabled>Reserve Slot</button>
+      <p id="bookError" class="error-text" style="display:none;"></p>
+      <p id="bookSuccess" style="display:none;color:var(--green);font-weight:600;margin-top:12px;"></p>
+    </form>
+  </div>
+</div>
+
+<script src="/js/common.js"></script>
+<script>
+let lots = [];
+let currentLotId = null;
+let selectedSlotId = null;
+
+async function loadLots() {
+  const { lots: l } = await api('/api/lots');
+  lots = l;
+  const tabs = document.getElementById('lotTabs');
+  tabs.innerHTML = lots.map((lot, i) =>
+    `<div class="lot-tab ${i === 0 ? 'active' : ''}" data-id="${lot.id}">${esc(lot.name)}</div>`
+  ).join('');
+  tabs.querySelectorAll('.lot-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.querySelectorAll('.lot-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      loadSlots(tab.dataset.id);
+    });
+  });
+  if (lots[0]) loadSlots(lots[0].id);
+}
+
+async function loadSlots(lotId) {
+  currentLotId = lotId;
+  selectedSlotId = null;
+  updateSummary();
+  const grid = document.getElementById('slotGrid');
+  grid.innerHTML = '<p class="muted">Loading slots…</p>';
+  const { slots } = await api(`/api/lots/${lotId}/slots`);
+  grid.innerHTML = slots.map(s => {
+    const cls = s.status === 'available' ? 'available' : s.status;
+    return `<div class="slot ${cls}" data-id="${s.id}" data-number="${esc(s.slot_number)}">${esc(s.slot_number)}</div>`;
+  }).join('');
+  grid.querySelectorAll('.slot.available').forEach(el => {
+    el.addEventListener('click', () => {
+      grid.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedSlotId = el.dataset.id;
+      updateSummary(el.dataset.number);
+    });
+  });
+}
+
+function updateSummary(number) {
+  document.getElementById('selectedSlotLabel').textContent = number || 'None';
+  document.getElementById('reserveBtn').disabled = !selectedSlotId;
+}
+
+async function loadVehicles() {
+  const { vehicles } = await api('/api/vehicles');
+  const sel = document.getElementById('vehicle_id');
+  if (vehicles.length) {
+    sel.innerHTML = vehicles.map(v => `<option value="${v.id}">${esc(v.plate_no)} — ${esc(v.make || '')} ${esc(v.model || '')}</option>`).join('');
+  }
+}
+
+document.getElementById('bookForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const errEl = document.getElementById('bookError');
+  const okEl = document.getElementById('bookSuccess');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+  const btn = document.getElementById('reserveBtn');
+  btn.disabled = true;
+  try {
+    await api('/api/reservations', {
+      method: 'POST',
+      body: JSON.stringify({
+        slot_id: selectedSlotId,
+        vehicle_id: document.getElementById('vehicle_id').value || null,
+        reservation_date: document.getElementById('reservation_date').value,
+        start_time: document.getElementById('start_time').value,
+        end_time: document.getElementById('end_time').value
+      })
+    });
+    okEl.textContent = 'Slot reserved! Redirecting to your dashboard…';
+    okEl.style.display = 'block';
+    setTimeout(() => (window.location.href = '/dashboard.html'), 1200);
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    if (currentLotId) loadSlots(currentLotId); // refresh in case slot was taken
+  }
+});
+
+(async function () {
+  const user = await requireAuth('user');
+  if (!user) return;
+  document.getElementById('reservation_date').min = new Date().toISOString().slice(0, 10);
+  document.getElementById('reservation_date').value = new Date().toISOString().slice(0, 10);
+  await loadLots();
+  await loadVehicles();
+})();
+</script>
+</body>
+</html>

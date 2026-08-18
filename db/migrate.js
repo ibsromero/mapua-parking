@@ -7,8 +7,9 @@ async function migrate() {
   try {
     await pool.query(schema);
     console.log('✅ Schema applied successfully.');
-  } catch (err) {
-    console.error('❌ Migration failed:', err.message);
+    } catch (err) {
+    console.error('❌ Migration failed:', err.message || err.code || err);
+    if (err.code) console.error('   Error code:', err.code);
     process.exitCode = 1;
   } finally {
     await pool.end();

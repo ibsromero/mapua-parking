@@ -15,7 +15,7 @@ router.get('/overview', requireAdmin, async (req, res) => {
       pool.query(`SELECT COUNT(*) AS count FROM reservations WHERE status = 'ongoing'`),
       pool.query(`SELECT COUNT(*) AS count FROM sticker_applications WHERE status = 'pending'`),
       pool.query(`
-        SELECT l.*, 'entry' AS kind FROM entry_exit_logs l ORDER BY logged_at DESC LIMIT 10
+        SELECT * FROM entry_exit_logs ORDER BY logged_at DESC LIMIT 10
       `)
     ]);
     const occ = occupancy.rows[0];
@@ -69,6 +69,94 @@ router.post('/slots/:slotId/status', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to update slot.' });
+  }
+});
+
+// POST /api/admin/slots/:slotId/entry — gate simulation: log a vehicle
+// entering and mark its slot occupied. Requires the slot to currently have
+// an ongoing reservation (i.e. it's expected).
+router.post('/slots/:slotId/entry', requireAdmin, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const slotRes = await client.query('SELECT * FROM parking_slots WHERE id = $1 FOR UPDATE', [req.params.slotId]);
+    const slot = slotRes.rows[0];
+    if (!slot) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Slot not found.' });
+    }
+    if (slot.status !== 'reserved') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Only a reserved slot can be checked in.' });
+    }
+
+    const resvRes = await client.query(
+      `SELECT r.id, v.plate_no FROM reservations r
+       LEFT JOIN vehicles v ON v.id = r.vehicle_id
+       WHERE r.slot_id = $1 AND r.status = 'ongoing' LIMIT 1`,
+      [slot.id]
+    );
+    const reservation = resvRes.rows[0];
+
+    await client.query(
+      `INSERT INTO entry_exit_logs (reservation_id, plate_no, action) VALUES ($1, $2, 'entry')`,
+      [reservation ? reservation.id : null, reservation ? reservation.plate_no : null]
+    );
+    await client.query(`UPDATE parking_slots SET status = 'occupied' WHERE id = $1`, [slot.id]);
+
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Failed to log entry.' });
+  } finally {
+    client.release();
+  }
+});
+
+// POST /api/admin/slots/:slotId/exit — gate simulation: log a vehicle
+// leaving, complete its reservation, and free the slot.
+router.post('/slots/:slotId/exit', requireAdmin, async (req, res) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const slotRes = await client.query('SELECT * FROM parking_slots WHERE id = $1 FOR UPDATE', [req.params.slotId]);
+    const slot = slotRes.rows[0];
+    if (!slot) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Slot not found.' });
+    }
+    if (slot.status !== 'occupied') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Only an occupied slot can be checked out.' });
+    }
+
+    const resvRes = await client.query(
+      `SELECT r.id, v.plate_no FROM reservations r
+       LEFT JOIN vehicles v ON v.id = r.vehicle_id
+       WHERE r.slot_id = $1 AND r.status = 'ongoing' LIMIT 1`,
+      [slot.id]
+    );
+    const reservation = resvRes.rows[0];
+
+    await client.query(
+      `INSERT INTO entry_exit_logs (reservation_id, plate_no, action) VALUES ($1, $2, 'exit')`,
+      [reservation ? reservation.id : null, reservation ? reservation.plate_no : null]
+    );
+    if (reservation) {
+      await client.query(`UPDATE reservations SET status = 'completed' WHERE id = $1`, [reservation.id]);
+    }
+    await client.query(`UPDATE parking_slots SET status = 'available' WHERE id = $1`, [slot.id]);
+
+    await client.query('COMMIT');
+    res.json({ ok: true });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Failed to log exit.' });
+  } finally {
+    client.release();
   }
 });
 

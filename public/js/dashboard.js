@@ -15,16 +15,41 @@
         <div class="grid-2" style="margin-top:16px;">
           <div><label>Location</label><div>${esc(reservation.lot_name)}</div></div>
           <div><label>Slot</label><div style="color:var(--maroon);font-weight:700;">#${esc(reservation.slot_number)}</div></div>
-          <div><label>Date</label><div>${esc(reservation.reservation_date?.slice(0,10))}</div></div>
+          <div><label>Time</label><div id="resTimeLabel">${esc(reservation.start_time?.slice(0,5))} - ${esc(reservation.end_time?.slice(0,5))}</div></div>
           <div><label>Vehicle</label><div>${esc(reservation.plate_no || '—')}</div></div>
         </div>
+        <p id="extendMsg" class="muted" style="margin-top:12px;display:none;"></p>
         <div style="display:flex;gap:12px;margin-top:20px;">
           <button class="btn" style="flex:1;" id="cancelBtn">Cancel</button>
+          <button class="btn btn-primary" style="flex:1;" id="extendBtn">Extend Time (+1 hr)</button>
         </div>`;
       document.getElementById('cancelBtn').addEventListener('click', async () => {
         if (!confirm('Cancel this reservation?')) return;
         await api(`/api/reservations/${reservation.id}/cancel`, { method: 'POST' });
         location.reload();
+      });
+      document.getElementById('extendBtn').addEventListener('click', async (e) => {
+        const btn = e.currentTarget;
+        const msg = document.getElementById('extendMsg');
+        btn.disabled = true;
+        msg.style.display = 'none';
+        try {
+          const { reservation: updated } = await api(`/api/reservations/${reservation.id}/extend`, {
+            method: 'POST',
+            body: JSON.stringify({ extra_minutes: 60 })
+          });
+          document.getElementById('resTimeLabel').textContent =
+            `${updated.start_time.slice(0,5)} - ${updated.end_time.slice(0,5)}`;
+          msg.textContent = 'Extended by 1 hour.';
+          msg.style.color = 'var(--green)';
+          msg.style.display = 'block';
+        } catch (err) {
+          msg.textContent = err.message;
+          msg.style.color = '#b91c1c';
+          msg.style.display = 'block';
+        } finally {
+          btn.disabled = false;
+        }
       });
     }
   } catch (e) {

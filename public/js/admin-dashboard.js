@@ -14,7 +14,7 @@
     } else {
       box.innerHTML = data.recent_activity.map(a => `
         <div style="display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border);">
-          <div><strong>Plate: ${esc(a.plate_no || '—')}</strong><br/><span class="muted" style="font-size:13px;">${esc(a.action)}</span></div>
+          <div><strong>Plate: ${esc(a.plate_no || '—')}</strong><br/><span class="badge ${a.action === 'entry' ? 'badge-available' : 'badge-occupied'}" style="margin-top:4px;display:inline-block;">${esc(a.action)}</span></div>
           <span class="muted" style="font-size:13px;">${new Date(a.logged_at).toLocaleString()}</span>
         </div>`).join('');
     }

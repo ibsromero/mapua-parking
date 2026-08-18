@@ -45,13 +45,33 @@ function showDetail(slot) {
       Color: ${esc(slot.color || '—')}</p>
       <p>Time Window: ${esc((slot.start_time||'').slice(0,5))} - ${esc((slot.end_time||'').slice(0,5))}, ${esc(slot.reservation_date ? slot.reservation_date.slice(0,10) : '')}</p>`;
   }
+
+  // Gate actions only make sense for reserved (about to arrive) or occupied
+  // (about to leave) slots — this simulates the physical entry/exit gate.
+  let gateActions = '';
+  if (slot.status === 'reserved') {
+    gateActions = `<button class="btn btn-primary" onclick="logGate(${slot.id}, 'entry')">Log Entry (Vehicle Arrived)</button>`;
+  } else if (slot.status === 'occupied') {
+    gateActions = `<button class="btn btn-primary" onclick="logGate(${slot.id}, 'exit')">Log Exit (Vehicle Left)</button>`;
+  }
+
   body.innerHTML = `
     <span class="badge badge-${slot.status}">${esc(slot.status)}</span>
     <div style="margin:16px 0;">${occupant}</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
+      ${gateActions}
       <button class="btn" onclick="setStatus(${slot.id}, 'available')">Mark Available</button>
       <button class="btn" onclick="setStatus(${slot.id}, 'maintenance')">Block for Maintenance</button>
     </div>`;
+}
+
+async function logGate(slotId, action) {
+  try {
+    await api(`/api/admin/slots/${slotId}/${action}`, { method: 'POST' });
+    loadSlots(currentLotId);
+  } catch (e) {
+    alert(e.message);
+  }
 }
 
 async function setStatus(slotId, status) {

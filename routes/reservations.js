@@ -146,6 +146,74 @@ router.get('/history', requireLogin, async (req, res) => {
   }
 });
 
+// POST /api/reservations/:id/extend  { extra_minutes }  — default 60 if omitted
+const MAX_EXTEND_MINUTES = 180; // cap a single extension request (3 hours) to prevent abuse
+router.post('/:id/extend', requireLogin, async (req, res) => {
+  let extraMinutes = Number.parseInt(req.body.extra_minutes, 10);
+  if (!Number.isInteger(extraMinutes) || extraMinutes <= 0) extraMinutes = 60;
+  if (extraMinutes > MAX_EXTEND_MINUTES) {
+    return res.status(400).json({ error: `Cannot extend by more than ${MAX_EXTEND_MINUTES} minutes at once.` });
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    const { rows } = await client.query(
+      `SELECT * FROM reservations WHERE id = $1 AND user_id = $2 FOR UPDATE`,
+      [req.params.id, req.session.user.id]
+    );
+    const reservation = rows[0];
+    if (!reservation) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Reservation not found.' });
+    }
+    if (reservation.status !== 'ongoing') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Only an ongoing reservation can be extended.' });
+    }
+
+    // Compute the new end time and make sure it doesn't run into the next
+    // reservation already booked on the same slot that same day.
+    const newEndRes = await client.query(
+      `SELECT (($1::time) + ($2 || ' minutes')::interval)::time AS new_end`,
+      [reservation.end_time, extraMinutes]
+    );
+    const newEnd = newEndRes.rows[0].new_end;
+
+    if (newEnd <= reservation.end_time) {
+      // Interval math wrapped past midnight — keep reservations same-day/simple.
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Cannot extend past midnight. Please book a new reservation instead.' });
+    }
+
+    const conflict = await client.query(
+      `SELECT id FROM reservations
+       WHERE slot_id = $1 AND id != $2 AND reservation_date = $3
+         AND status IN ('ongoing') AND start_time < $4 AND start_time >= $5`,
+      [reservation.slot_id, reservation.id, reservation.reservation_date, newEnd, reservation.end_time]
+    );
+    if (conflict.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'Another reservation starts before that extended time. Try a shorter extension.' });
+    }
+
+    const updated = await client.query(
+      `UPDATE reservations SET end_time = $1 WHERE id = $2 RETURNING *`,
+      [newEnd, reservation.id]
+    );
+
+    await client.query('COMMIT');
+    res.json({ reservation: updated.rows[0] });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Failed to extend reservation.' });
+  } finally {
+    client.release();
+  }
+});
+
 // POST /api/reservations/:id/cancel
 router.post('/:id/cancel', requireLogin, async (req, res) => {
   const client = await pool.connect();

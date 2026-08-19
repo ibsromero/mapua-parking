@@ -51,3 +51,16 @@ async function logout() {
   await api('/api/auth/logout', { method: 'POST' });
   window.location.href = '/login.html';
 }
+
+// Delegated handler for every "Logout" link across the app. Inline
+// onclick="" attributes are blocked by the CSP (script-src-attr 'none'),
+// so every page's logout link uses a data-logout attribute instead of an
+// inline handler, and this one listener (loaded on every page via
+// common.js) handles all of them.
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-logout]');
+  if (el) {
+    e.preventDefault();
+    logout();
+  }
+});

@@ -50,18 +50,18 @@ function showDetail(slot) {
   // (about to leave) slots — this simulates the physical entry/exit gate.
   let gateActions = '';
   if (slot.status === 'reserved') {
-    gateActions = `<button class="btn btn-primary" onclick="logGate(${slot.id}, 'entry')">Log Entry (Vehicle Arrived)</button>`;
+    gateActions = `<button class="btn btn-primary" data-gate="entry">Log Entry (Vehicle Arrived)</button>`;
   } else if (slot.status === 'occupied') {
-    gateActions = `<button class="btn btn-primary" onclick="logGate(${slot.id}, 'exit')">Log Exit (Vehicle Left)</button>`;
+    gateActions = `<button class="btn btn-primary" data-gate="exit">Log Exit (Vehicle Left)</button>`;
   }
 
   body.innerHTML = `
     <span class="badge badge-${slot.status}">${esc(slot.status)}</span>
     <div style="margin:16px 0;">${occupant}</div>
-    <div style="display:flex;flex-direction:column;gap:8px;">
+    <div style="display:flex;flex-direction:column;gap:8px;" data-slot-id="${slot.id}">
       ${gateActions}
-      <button class="btn" onclick="setStatus(${slot.id}, 'available')">Mark Available</button>
-      <button class="btn" onclick="setStatus(${slot.id}, 'maintenance')">Block for Maintenance</button>
+      <button class="btn" data-set-status="available">Mark Available</button>
+      <button class="btn" data-set-status="maintenance">Block for Maintenance</button>
     </div>`;
 }
 
@@ -82,6 +82,22 @@ async function setStatus(slotId, status) {
     alert(e.message);
   }
 }
+
+// The detail panel's action buttons (gate log / status change) are
+// re-rendered on every showDetail() call, so this listener is delegated on
+// the stable #detailBody container instead — data attributes replace the
+// inline onclick handlers CSP blocks.
+document.getElementById('detailBody').addEventListener('click', (e) => {
+  const container = e.target.closest('[data-slot-id]');
+  if (!container) return;
+  const slotId = Number(container.dataset.slotId);
+
+  const gateBtn = e.target.closest('[data-gate]');
+  if (gateBtn) return logGate(slotId, gateBtn.dataset.gate);
+
+  const statusBtn = e.target.closest('[data-set-status]');
+  if (statusBtn) return setStatus(slotId, statusBtn.dataset.setStatus);
+});
 
 (async function () {
   const user = await requireAuth('admin');

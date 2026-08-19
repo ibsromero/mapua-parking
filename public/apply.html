@@ -70,7 +70,7 @@
           <input type="file" id="university_id_file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" />
         </div>
       </div>
-      <div style="text-align:right;"><button type="button" class="btn btn-primary" onclick="goStep(2)">Next</button></div>
+      <div style="text-align:right;"><button type="button" class="btn btn-primary" data-goto="2">Next</button></div>
     </div>
 
     <!-- Step 2: Vehicle -->
@@ -101,8 +101,8 @@
         </select>
       </div>
       <div style="display:flex;justify-content:space-between;">
-        <button type="button" class="btn" onclick="goStep(1)">Back</button>
-        <button type="button" class="btn btn-primary" onclick="goStep(3)">Next</button>
+        <button type="button" class="btn" data-goto="1">Back</button>
+        <button type="button" class="btn btn-primary" data-goto="3">Next</button>
       </div>
     </div>
 
@@ -116,8 +116,8 @@
         <input type="checkbox" id="rules_acknowledged" style="width:auto;" required /> I have read and agree to the rules and regulations.
       </label>
       <div style="display:flex;justify-content:space-between;margin-top:20px;">
-        <button type="button" class="btn" onclick="goStep(2)">Back</button>
-        <button type="button" class="btn btn-primary" onclick="goStep(4)">Next</button>
+        <button type="button" class="btn" data-goto="2">Back</button>
+        <button type="button" class="btn btn-primary" data-goto="4">Next</button>
       </div>
     </div>
 
@@ -130,7 +130,7 @@
         Once submitted, you can settle your term-based parking fee at the University Registrar or via the Online Payment Portal. Your sticker will be issued upon payment verification.
       </div>
       <div style="display:flex;justify-content:space-between;">
-        <button type="button" class="btn" onclick="goStep(3)">Back</button>
+        <button type="button" class="btn" data-goto="3">Back</button>
         <button type="submit" class="btn btn-primary" id="submitBtn">Submit Application</button>
       </div>
       <p id="applyError" class="error-text" style="display:none;"></p>

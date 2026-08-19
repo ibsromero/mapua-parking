@@ -13,6 +13,12 @@ document.querySelectorAll('.upload-box').forEach(box => {
   });
 });
 
+// Step navigation buttons use data-goto instead of inline onclick (blocked by CSP).
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('[data-goto]');
+  if (el) goStep(Number(el.dataset.goto));
+});
+
 function goStep(n) {
   document.querySelectorAll('.step').forEach(s => {
     const step = Number(s.dataset.step);

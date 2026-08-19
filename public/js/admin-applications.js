@@ -21,8 +21,8 @@ async function loadApps(status) {
       <td><span class="badge ${badgeClass(a.status)}">${esc(a.status)}</span></td>
       <td>
         ${a.status === 'pending' ? `
-          <button class="btn" style="padding:6px 10px;font-size:12px;" onclick="decide(${a.id}, 'rejected')">Reject</button>
-          <button class="btn btn-primary" style="padding:6px 10px;font-size:12px;" onclick="decide(${a.id}, 'approved')">Approve</button>
+          <button class="btn" style="padding:6px 10px;font-size:12px;" data-decide-id="${a.id}" data-decision="rejected">Reject</button>
+          <button class="btn btn-primary" style="padding:6px 10px;font-size:12px;" data-decide-id="${a.id}" data-decision="approved">Approve</button>
         ` : '<span class="muted" style="font-size:12px;">Reviewed</span>'}
       </td>
     </tr>`).join('');
@@ -38,6 +38,14 @@ async function decide(id, decision) {
     alert(e.message);
   }
 }
+
+// Approve/Reject buttons are re-rendered on every loadApps() call, so this
+// listener is delegated on the table body once rather than bound per-row —
+// data attributes replace the inline onclick that CSP blocks.
+document.getElementById('appRows').addEventListener('click', (e) => {
+  const el = e.target.closest('[data-decide-id]');
+  if (el) decide(Number(el.dataset.decideId), el.dataset.decision);
+});
 
 document.getElementById('filterTabs').addEventListener('click', (e) => {
   if (e.target.tagName !== 'BUTTON') return;

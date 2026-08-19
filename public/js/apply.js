@@ -32,16 +32,29 @@ function goStep(n) {
 
 function val(id) { return document.getElementById(id).value; }
 
+// Joins only the non-empty parts with the given separator, so blank optional
+// fields (color, year, course/year, email) don't leave dangling punctuation
+// like "ABC 1234 -" or a lone "," in the review summary.
+function joinParts(parts, sep) {
+  return parts.filter(p => p && p.trim()).join(sep);
+}
+
 function renderReview() {
+  const applicantLines = [val('full_name'), val('id_number'), val('course_year'), val('email')]
+    .filter(v => v && v.trim())
+    .map(esc);
+  const vehicleTitle = joinParts([val('plate_no'), joinParts([val('make'), val('model')], ' ')], ' - ');
+  const vehicleDetail = joinParts([val('color'), val('year')], ', ');
+
   document.getElementById('reviewSummary').innerHTML = `
     <div class="grid-2">
       <div>
         <strong>Applicant Info</strong>
-        <p>${esc(val('full_name'))}<br/>${esc(val('id_number'))}<br/>${esc(val('course_year'))}<br/>${esc(val('email'))}</p>
+        <p>${applicantLines.join('<br/>') || '<span class="muted">Not provided</span>'}</p>
       </div>
       <div>
         <strong>Vehicle Info</strong>
-        <p>${esc(val('plate_no'))} - ${esc(val('make'))} ${esc(val('model'))}<br/>${esc(val('color'))}, ${esc(val('year'))}</p>
+        <p>${esc(vehicleTitle) || '<span class="muted">Not provided</span>'}${vehicleDetail ? `<br/>${esc(vehicleDetail)}` : ''}</p>
       </div>
     </div>`;
 }

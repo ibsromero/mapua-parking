@@ -42,15 +42,15 @@
     <h3 style="margin-top:0;">Reservation Summary</h3>
     <form id="bookForm">
       <div class="field">
-        <label>Date</label>
+        <label for="reservation_date">Date</label>
         <input type="date" id="reservation_date" required />
       </div>
       <div class="grid-2">
-        <div class="field"><label>Start Time</label><input type="time" id="start_time" value="08:00" required /></div>
-        <div class="field"><label>End Time</label><input type="time" id="end_time" value="17:00" required /></div>
+        <div class="field"><label for="start_time">Start Time</label><input type="time" id="start_time" value="08:00" required /></div>
+        <div class="field"><label for="end_time">End Time</label><input type="time" id="end_time" value="17:00" required /></div>
       </div>
       <div class="field">
-        <label>Vehicle</label>
+        <label for="vehicle_id">Vehicle</label>
         <select id="vehicle_id"><option value="">No vehicle on file yet</option></select>
       </div>
       <div class="alert alert-warning" style="margin-bottom:16px;">

@@ -62,15 +62,26 @@ router.post('/', requireLogin, async (req, res) => {
   if (start_time >= end_time) {
     return res.status(400).json({ error: 'End time must be after start time.' });
   }
-  // If a vehicle was supplied, make sure it actually belongs to this user (IDOR check)
-  if (vehicle_id !== undefined && vehicle_id !== null && vehicle_id !== '') {
-    const vId = Number.parseInt(vehicle_id, 10);
-    if (!Number.isInteger(vId)) return res.status(400).json({ error: 'Invalid vehicle.' });
-    const owned = await pool.query('SELECT id FROM vehicles WHERE id = $1 AND user_id = $2', [
-      vId,
-      req.session.user.id
-    ]);
-    if (!owned.rows[0]) return res.status(403).json({ error: 'That vehicle does not belong to you.' });
+  // A reservation must be for a specific, owned vehicle with an approved
+  // sticker — booking a slot with no vehicle attached doesn't make sense,
+  // and the whole point of the sticker requirement is enforced here rather
+  // than just mentioned in a banner.
+  const vId = Number.parseInt(vehicle_id, 10);
+  if (!Number.isInteger(vId)) {
+    return res.status(400).json({ error: 'Select a vehicle to reserve this slot for.' });
+  }
+  const owned = await pool.query('SELECT id FROM vehicles WHERE id = $1 AND user_id = $2', [
+    vId,
+    req.session.user.id
+  ]);
+  if (!owned.rows[0]) return res.status(403).json({ error: 'That vehicle does not belong to you.' });
+
+  const approvedSticker = await pool.query(
+    `SELECT id FROM sticker_applications WHERE vehicle_id = $1 AND user_id = $2 AND status = 'approved'`,
+    [vId, req.session.user.id]
+  );
+  if (!approvedSticker.rows[0]) {
+    return res.status(403).json({ error: 'This vehicle needs an approved car sticker before you can book a slot.' });
   }
 
   const client = await pool.connect();
@@ -91,7 +102,7 @@ router.post('/', requireLogin, async (req, res) => {
     const resRow = await client.query(
       `INSERT INTO reservations (user_id, slot_id, vehicle_id, reservation_date, start_time, end_time, status)
        VALUES ($1, $2, $3, $4, $5, $6, 'ongoing') RETURNING *`,
-      [req.session.user.id, slot_id, vehicle_id || null, reservation_date, start_time, end_time]
+      [req.session.user.id, slot_id, vId, reservation_date, start_time, end_time]
     );
 
     await client.query(`UPDATE parking_slots SET status = 'reserved' WHERE id = $1`, [slot_id]);

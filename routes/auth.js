@@ -130,4 +130,23 @@ router.get('/me', (req, res) => {
   res.json({ user: req.session.user || null });
 });
 
+// GET /api/auth/profile — full profile for the logged-in user (used to
+// pre-fill read-only applicant info on the sticker application, so the
+// applicant never re-types details their account already has).
+router.get('/profile', async (req, res) => {
+  if (!req.session.user) return res.status(401).json({ error: 'Not logged in.' });
+  try {
+    const { rows } = await pool.query(
+      `SELECT id_number, full_name, email, contact_no, address, applicant_type, course_year, school_dept
+       FROM users WHERE id = $1`,
+      [req.session.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Profile not found.' });
+    res.json({ profile: rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load profile.' });
+  }
+});
+
 module.exports = router;

@@ -47,10 +47,21 @@ function updateSummary(number) {
 
 async function loadVehicles() {
   const { vehicles } = await api('/api/vehicles');
+  const eligible = vehicles.filter(v => v.has_approved_sticker);
   const sel = document.getElementById('vehicle_id');
-  if (vehicles.length) {
-    sel.innerHTML = vehicles.map(v => `<option value="${v.id}">${esc(v.plate_no)} — ${esc(v.make || '')} ${esc(v.model || '')}</option>`).join('');
+  const notice = document.getElementById('noVehicleNotice');
+  const form = document.getElementById('bookForm');
+
+  if (!eligible.length) {
+    notice.style.display = 'block';
+    form.style.display = 'none';
+    return false;
   }
+
+  notice.style.display = 'none';
+  form.style.display = 'block';
+  sel.innerHTML = eligible.map(v => `<option value="${v.id}">${esc(v.plate_no)} - ${esc(v.make || '')} ${esc(v.model || '')}</option>`).join('');
+  return true;
 }
 
 document.getElementById('bookForm').addEventListener('submit', async (e) => {

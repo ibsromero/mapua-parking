@@ -17,12 +17,19 @@ const PLATE_RE = /^[A-Za-z0-9 -]{1,15}$/;
 const YEAR_RE = /^(19|20)\d{2}$/;
 const RELATIONS = ['self', 'parent', 'sibling', 'spouse', 'relative', 'other'];
 
-// GET /api/vehicles -> current user's vehicles
+// GET /api/vehicles -> current user's vehicles, each flagged with whether it
+// has an approved sticker (only those are eligible for booking a slot).
 router.get('/', requireLogin, async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM vehicles WHERE user_id = $1 ORDER BY created_at DESC', [
-      req.session.user.id
-    ]);
+    const { rows } = await pool.query(
+      `SELECT v.*,
+        EXISTS(
+          SELECT 1 FROM sticker_applications a
+          WHERE a.vehicle_id = v.id AND a.status = 'approved'
+        ) AS has_approved_sticker
+       FROM vehicles v WHERE v.user_id = $1 ORDER BY v.created_at DESC`,
+      [req.session.user.id]
+    );
     res.json({ vehicles: rows });
   } catch (err) {
     console.error(err);

@@ -18,64 +18,22 @@
 </style>
 </head>
 <body>
-<div class="navbar"><a class="brand brand-with-logo" href="/login.html"><img src="/images/mapua-logo.png" alt="Mapúa University" class="brand-logo"><span class="brand-tagline">Parking Lot Application</span></a></div>
+<div class="navbar"><a class="brand brand-with-logo" href="/dashboard.html"><img src="/images/mapua-logo.png" alt="Mapúa University" class="brand-logo"><span class="brand-tagline">Parking Lot Application</span></a></div>
 
 <div class="container" style="max-width:800px;">
-  <p style="text-align:center;" class="muted">Complete the form below to apply for your entry at parking lot.</p>
+  <p style="text-align:center;" class="muted">Complete the form below to apply for a vehicle sticker.</p>
 
   <div class="steps">
-    <div class="step active" data-step="1"><div class="circle">1</div>Applicant</div>
-    <div class="step" data-step="2"><div class="circle">2</div>Vehicle</div>
+    <div class="step active" data-step="1"><div class="circle">1</div>Vehicle</div>
+    <div class="step" data-step="2"><div class="circle">2</div>Documents</div>
     <div class="step" data-step="3"><div class="circle">3</div>Rules</div>
     <div class="step" data-step="4"><div class="circle">4</div>Review</div>
   </div>
   <p id="stepError" class="error-text" style="display:none;text-align:center;margin-bottom:16px;"></p>
 
   <form id="applyForm">
-    <!-- Step 1: Applicant -->
+    <!-- Step 1: Vehicle -->
     <div class="panel active card" data-panel="1">
-      <h3>1. Applicant Information</h3>
-      <div class="field">
-        <label for="applicant_type">Applicant Is</label>
-        <select id="applicant_type" required>
-          <option value="student">Student</option>
-          <option value="faculty">Faculty</option>
-          <option value="non_teaching">Non-Teaching</option>
-        </select>
-      </div>
-      <div class="field"><label for="full_name">Name of Applicant</label><input id="full_name" placeholder="Last Name, First Name, M.I." required maxlength="150" /></div>
-      <div class="field"><label for="id_number">ID Number</label><input id="id_number" placeholder="e.g. 2021105432" required maxlength="20" /></div>
-      <div class="field"><label for="address">Address</label><input id="address" placeholder="Complete Home Address" maxlength="200" /></div>
-      <div class="grid-2">
-        <div class="field"><label for="course_year">Course & Year (if student)</label><input id="course_year" placeholder="e.g. BSCS - 3rd Year" maxlength="100" /></div>
-        <div class="field"><label for="contact_no">Contact No.</label><input id="contact_no" placeholder="09XX-XXX-XXXX" maxlength="30" /></div>
-      </div>
-      <div class="field"><label for="email">Email Address</label><input id="email" type="email" placeholder="you@mymail.mapua.edu.ph" maxlength="150" /></div>
-      <div class="field"><label for="password">Password</label><input id="password" type="password" placeholder="Create a password" required minlength="8" maxlength="200" /></div>
-
-      <h3>Required Documents</h3>
-      <div class="field">
-        <label for="or_cr_file">Official Receipt / Certificate of Registration (OR/CR)</label>
-        <div class="upload-box" data-for="or_cr_file">Drag & drop or click to upload (PDF, JPG, PNG)</div>
-        <input type="file" id="or_cr_file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" />
-      </div>
-      <div class="grid-2">
-        <div class="field">
-          <label for="drivers_license_file">Driver's License</label>
-          <div class="upload-box" data-for="drivers_license_file">Upload File</div>
-          <input type="file" id="drivers_license_file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" />
-        </div>
-        <div class="field">
-          <label for="university_id_file">University ID</label>
-          <div class="upload-box" data-for="university_id_file">Upload File</div>
-          <input type="file" id="university_id_file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" />
-        </div>
-      </div>
-      <div style="text-align:right;"><button type="button" class="btn btn-primary" data-goto="2">Next</button></div>
-    </div>
-
-    <!-- Step 2: Vehicle -->
-    <div class="panel card" data-panel="2">
       <h3>Vehicle Details</h3>
       <div class="grid-3">
         <div class="field"><label for="plate_no">Plate No.</label><input id="plate_no" placeholder="ABC 1234" required maxlength="15" /></div>
@@ -100,6 +58,29 @@
           <option value="relative">Other Relative</option>
           <option value="other">Other</option>
         </select>
+      </div>
+      <div style="text-align:right;"><button type="button" class="btn btn-primary" data-goto="2">Next</button></div>
+    </div>
+
+    <!-- Step 2: Documents -->
+    <div class="panel card" data-panel="2">
+      <h3>Required Documents</h3>
+      <div class="field">
+        <label for="or_cr_file">Official Receipt / Certificate of Registration (OR/CR)</label>
+        <div class="upload-box" data-for="or_cr_file">Drag & drop or click to upload (PDF, JPG, PNG)</div>
+        <input type="file" id="or_cr_file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" />
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label for="drivers_license_file">Driver's License</label>
+          <div class="upload-box" data-for="drivers_license_file">Upload File</div>
+          <input type="file" id="drivers_license_file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" />
+        </div>
+        <div class="field">
+          <label for="university_id_file">University ID</label>
+          <div class="upload-box" data-for="university_id_file">Upload File</div>
+          <input type="file" id="university_id_file" accept=".pdf,.jpg,.jpeg,.png" style="display:none;" />
+        </div>
       </div>
       <div style="display:flex;justify-content:space-between;">
         <button type="button" class="btn" data-goto="1">Back</button>
@@ -126,7 +107,7 @@
     <div class="panel card" data-panel="4">
       <h3>Review Application</h3>
       <p class="muted">Please verify all information before submitting.</p>
-      <div id="reviewSummary"></div>
+      <div id="reviewSummary"><p class="muted">Loading your account details...</p></div>
       <div class="alert alert-warning" style="margin:20px 0;">
         Once submitted, you can settle your term-based parking fee at the University Registrar or via the Online Payment Portal. Your sticker will be issued upon payment verification.
       </div>

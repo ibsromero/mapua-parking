@@ -1,3 +1,5 @@
+let currentUser = null;
+
 const files = {};
 document.querySelectorAll('.upload-box').forEach(box => {
   box.addEventListener('click', () => document.getElementById(box.dataset.for).click());
@@ -21,7 +23,7 @@ document.addEventListener('click', (e) => {
   const el = e.target.closest('[data-goto]');
   if (!el) return;
   const target = Number(el.dataset.goto);
-  // Only gate forward movement — always allow going back without validation.
+  // Only gate forward movement -- always allow going back without validation.
   if (target > currentStep && !validateStep(currentStep)) return;
   goStep(target);
 });
@@ -38,7 +40,7 @@ function isStepValid(n) {
   for (const field of requiredFields) {
     if (!field.checkValidity()) return false;
   }
-  if (n === 1) {
+  if (n === 2) {
     for (const doc of REQUIRED_DOCS) {
       if (!files[doc.id]) return false;
     }
@@ -48,9 +50,6 @@ function isStepValid(n) {
 
 function validateStep(n) {
   const panel = document.querySelector(`.panel[data-panel="${n}"]`);
-
-  // Visible required fields (text/select/checkbox) — use native HTML5
-  // validation so the browser shows its normal inline error bubble.
   const requiredFields = panel.querySelectorAll('[required]:not([type="file"])');
   for (const field of requiredFields) {
     if (!field.checkValidity()) {
@@ -61,8 +60,8 @@ function validateStep(n) {
 
   // The three document uploads are hidden <input type="file"> elements
   // (a styled div handles the click), so native reportValidity() on a
-  // hidden input isn't reliable across browsers — check them manually.
-  if (n === 1) {
+  // hidden input isn't reliable across browsers -- check them manually.
+  if (n === 2) {
     for (const doc of REQUIRED_DOCS) {
       if (!files[doc.id]) {
         showStepError(`Please upload your ${doc.label} before continuing.`);
@@ -101,25 +100,26 @@ function goStep(n) {
 
 function val(id) { return document.getElementById(id).value; }
 
-// Joins only the non-empty parts with the given separator, so blank optional
-// fields (color, year, course/year, email) don't leave dangling punctuation
-// like "ABC 1234 -" or a lone "," in the review summary.
 function joinParts(parts, sep) {
   return parts.filter(p => p && p.trim()).join(sep);
 }
 
 function renderReview() {
-  const applicantLines = [val('full_name'), val('id_number'), val('course_year'), val('email')]
-    .filter(v => v && v.trim())
-    .map(esc);
+  const box = document.getElementById('reviewSummary');
+  const applicantLines = currentUser
+    ? [currentUser.full_name, currentUser.id_number, currentUser.course_year, currentUser.email]
+        .filter(v => v && String(v).trim())
+        .map(esc)
+    : [];
+
   const vehicleTitle = joinParts([val('plate_no'), joinParts([val('make'), val('model')], ' ')], ' - ');
   const vehicleDetail = joinParts([val('color'), val('year')], ', ');
 
-  document.getElementById('reviewSummary').innerHTML = `
+  box.innerHTML = `
     <div class="grid-2">
       <div>
         <strong>Applicant Info</strong>
-        <p>${applicantLines.join('<br/>') || '<span class="muted">Not provided</span>'}</p>
+        <p>${applicantLines.join('<br/>') || '<span class="muted">Not available</span>'}</p>
       </div>
       <div>
         <strong>Vehicle Info</strong>
@@ -138,9 +138,7 @@ document.getElementById('applyForm').addEventListener('submit', async (e) => {
   // Defense in depth: re-validate every step's requirements right before
   // submitting, since a user can navigate back to an earlier step and
   // clear a field after it was already validated once. Checked silently
-  // first so a valid submission never flashes through earlier steps;
-  // only jumps back and shows the browser's error bubble if something's
-  // actually wrong.
+  // first so a valid submission never flashes through earlier steps.
   for (const step of [1, 2, 3]) {
     if (!isStepValid(step)) {
       goStep(step);
@@ -153,22 +151,7 @@ document.getElementById('applyForm').addEventListener('submit', async (e) => {
   btn.disabled = true;
 
   try {
-    // 1. Register the applicant as a user (id_number + password become their login)
-    const reg = await api('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({
-        id_number: val('id_number'),
-        full_name: val('full_name'),
-        email: val('email'),
-        contact_no: val('contact_no'),
-        address: val('address'),
-        applicant_type: val('applicant_type'),
-        course_year: val('course_year'),
-        password: val('password')
-      })
-    });
-
-    // 2. Save the vehicle
+    // Save the vehicle (tied to the already-logged-in user's session)
     const { vehicle } = await api('/api/vehicles', {
       method: 'POST',
       body: JSON.stringify({
@@ -178,14 +161,14 @@ document.getElementById('applyForm').addEventListener('submit', async (e) => {
       })
     });
 
-    // 3. Submit the application with uploaded files
+    // Submit the application with uploaded files
     const fd = new FormData();
     fd.append('vehicle_id', vehicle.id);
     fd.append('rules_acknowledged', document.getElementById('rules_acknowledged').checked);
     Object.entries(files).forEach(([key, file]) => fd.append(key, file));
     await api('/api/applications', { method: 'POST', body: fd });
 
-    okEl.textContent = 'Application submitted! Redirecting to your dashboard…';
+    okEl.textContent = 'Application submitted. Redirecting to your dashboard...';
     okEl.style.display = 'block';
     setTimeout(() => (window.location.href = '/dashboard.html'), 1500);
   } catch (err) {
@@ -194,3 +177,14 @@ document.getElementById('applyForm').addEventListener('submit', async (e) => {
     btn.disabled = false;
   }
 });
+
+(async function () {
+  const user = await requireAuth('user');
+  if (!user) return;
+  try {
+    const { profile } = await api('/api/auth/profile');
+    currentUser = profile;
+  } catch (e) {
+    currentUser = { full_name: user.full_name, id_number: user.id_number };
+  }
+})();

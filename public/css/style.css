@@ -19,8 +19,14 @@
   display: inline-flex; align-items: center; justify-content: center;
   width: 26px; height: 26px; border-radius: 6px; background: var(--maroon);
   color: #fff; font-size: 13px; font-weight: 800; flex-shrink: 0;
+  line-height: 1; text-align: center; padding: 0; overflow: hidden;
 }
+.brand-mark img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .brand-mark-lg { width: 56px; height: 56px; border-radius: 10px; font-size: 26px; margin: 0 auto 16px; }
+.admin-tag {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+  color: var(--text-muted); background: var(--gray-badge); padding: 3px 8px; border-radius: 4px;
+}
 
 body {
   margin: 0;
@@ -59,7 +65,7 @@ a { color: var(--maroon); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .card {
-  background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 24px;
+  background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 24px;
 }
 
 .badge { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
@@ -104,17 +110,6 @@ td { padding: 14px 12px; border-top: 1px solid var(--border); font-size: 14px; }
 .slot.selected { background: var(--maroon); color: #fff; border-color: var(--maroon); }
 .slot.occupied { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
 .slot.maintenance { background: #fef3c7; color: var(--amber); cursor: not-allowed; }
-
-.sidebar {
-  width: 220px; background: #fff; border-right: 1px solid var(--border);
-  min-height: 100vh; padding: 24px 0; position: fixed; left: 0; top: 0;
-}
-.sidebar .brand { padding: 0 20px 20px; font-weight: 800; color: var(--maroon); font-size: 18px; }
-.sidebar nav a {
-  display: block; padding: 12px 20px; color: var(--text); text-decoration: none; font-weight: 600; font-size: 14px;
-}
-.sidebar nav a.active { background: var(--maroon); color: #fff; }
-.admin-layout { margin-left: 220px; padding: 24px 32px; }
 
 .stat-card h3 { font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin: 0 0 8px; }
 .stat-card .value { font-size: 32px; font-weight: 800; }

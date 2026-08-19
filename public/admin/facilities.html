@@ -19,25 +19,23 @@
 </style>
 </head>
 <body>
-<div class="sidebar">
-  <div class="brand" style="display:flex;align-items:center;gap:10px;"><span class="brand-mark">P</span><span>Admin<br/><span style="font-size:12px;font-weight:400;color:var(--text-muted);">Management Portal</span></span></div>
+<div class="navbar">
+  <a class="brand" href="/admin/dashboard.html" style="display:inline-flex;align-items:center;gap:10px;"><span class="brand-mark">P</span> Mapúa Parking <span class="admin-tag">Admin</span></a>
   <nav>
     <a href="/admin/dashboard.html">Dashboard</a>
     <a href="/admin/applications.html">App Reviews</a>
     <a href="/admin/facilities.html" class="active">Facilities</a>
     <a href="/admin/support.html">Support</a>
   </nav>
-  <div style="margin-top:40px;">
-    <a href="#" data-logout style="display:block;padding:12px 20px;color:var(--text);text-decoration:none;font-weight:600;font-size:14px;">Logout</a>
-  </div>
+  <div><a href="#" data-logout class="btn">Logout</a></div>
 </div>
 
-<div class="admin-layout" style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start;">
+<div class="container" style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:start;">
   <div class="card">
     <h1 style="font-size:20px;">Parking Slot Control</h1>
     <p class="muted">Manage and monitor real-time parking allocation.</p>
     <div class="lot-tabs" id="lotTabs"></div>
-    <div class="slot-grid" id="slotGrid"><p class="muted">Loading…</p></div>
+    <div class="slot-grid" id="slotGrid"><p class="muted">Loading...</p></div>
   </div>
 
   <div class="card">

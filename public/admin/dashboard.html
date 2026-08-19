@@ -7,20 +7,18 @@
 <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
-<div class="sidebar">
-  <div class="brand" style="display:flex;align-items:center;gap:10px;"><span class="brand-mark">P</span><span>Admin<br/><span style="font-size:12px;font-weight:400;color:var(--text-muted);">Management Portal</span></span></div>
+<div class="navbar">
+  <a class="brand" href="/admin/dashboard.html" style="display:inline-flex;align-items:center;gap:10px;"><span class="brand-mark">P</span> Mapúa Parking <span class="admin-tag">Admin</span></a>
   <nav>
     <a href="/admin/dashboard.html" class="active">Dashboard</a>
     <a href="/admin/applications.html">App Reviews</a>
     <a href="/admin/facilities.html">Facilities</a>
     <a href="/admin/support.html">Support</a>
   </nav>
-  <div style="margin-top:40px;">
-    <a href="#" data-logout style="display:block;padding:12px 20px;color:var(--text);text-decoration:none;font-weight:600;font-size:14px;">Logout</a>
-  </div>
+  <div><a href="#" data-logout class="btn">Logout</a></div>
 </div>
 
-<div class="admin-layout">
+<div class="container">
   <h1>Dashboard Overview</h1>
   <p class="muted">Mapúa University - Main Campus Parking Status</p>
 
@@ -43,7 +41,7 @@
 
   <div class="card">
     <h3 style="margin-top:0;">Recent Activity</h3>
-    <div id="recentActivity"><p class="muted">Loading…</p></div>
+    <div id="recentActivity"><p class="muted">Loading...</p></div>
   </div>
 </div>
 

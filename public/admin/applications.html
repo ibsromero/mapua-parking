@@ -11,20 +11,18 @@
 </style>
 </head>
 <body>
-<div class="sidebar">
-  <div class="brand" style="display:flex;align-items:center;gap:10px;"><span class="brand-mark">P</span><span>Admin<br/><span style="font-size:12px;font-weight:400;color:var(--text-muted);">Management Portal</span></span></div>
+<div class="navbar">
+  <a class="brand" href="/admin/dashboard.html" style="display:inline-flex;align-items:center;gap:10px;"><span class="brand-mark">P</span> Mapúa Parking <span class="admin-tag">Admin</span></a>
   <nav>
     <a href="/admin/dashboard.html">Dashboard</a>
     <a href="/admin/applications.html" class="active">App Reviews</a>
     <a href="/admin/facilities.html">Facilities</a>
     <a href="/admin/support.html">Support</a>
   </nav>
-  <div style="margin-top:40px;">
-    <a href="#" data-logout style="display:block;padding:12px 20px;color:var(--text);text-decoration:none;font-weight:600;font-size:14px;">Logout</a>
-  </div>
+  <div><a href="#" data-logout class="btn">Logout</a></div>
 </div>
 
-<div class="admin-layout">
+<div class="container">
   <div style="display:flex;justify-content:space-between;align-items:center;">
     <div>
       <h1>Sticker Applications</h1>
@@ -41,7 +39,7 @@
   <div class="card" style="margin-top:20px;padding:0;overflow:hidden;">
     <table>
       <thead><tr><th>Applicant</th><th>ID Number</th><th>Type</th><th>Vehicle</th><th>Plate No.</th><th>Status</th><th>Actions</th></tr></thead>
-      <tbody id="appRows"><tr><td colspan="7" class="muted">Loading…</td></tr></tbody>
+      <tbody id="appRows"><tr><td colspan="7" class="muted">Loading...</td></tr></tbody>
     </table>
   </div>
 </div>

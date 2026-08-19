@@ -23,7 +23,7 @@ const registerLimiter = rateLimit({
   message: { error: 'Too many signups from this network. Please try again later.' }
 });
 
-// POST /api/auth/register  — used by the sticker application flow to create
+// POST /api/auth/register  - used by the sticker application flow to create
 // a login (id_number + password) for a new applicant.
 router.post('/register', registerLimiter, async (req, res) => {
   const id_number = clean(req.body.id_number, 20);
@@ -50,7 +50,7 @@ router.post('/register', registerLimiter, async (req, res) => {
   try {
     const existing = await pool.query('SELECT id FROM users WHERE id_number = $1', [id_number]);
     if (existing.rows[0]) {
-      // Deliberately generic — don't confirm/deny which ID numbers are registered.
+      // Deliberately generic - don't confirm/deny which ID numbers are registered.
       return res.status(400).json({ error: 'Unable to register with the details provided.' });
     }
 
@@ -77,7 +77,7 @@ router.post('/register', registerLimiter, async (req, res) => {
 router.post('/login', async (req, res) => {
   const { id_number, password } = req.body;
 
-  // Server-side validation — never trust the client. Allowlist-style format
+  // Server-side validation - never trust the client. Allowlist-style format
   // check on id_number; length cap on password to avoid oversized payloads
   // being hashed/compared.
   if (
@@ -87,7 +87,7 @@ router.post('/login', async (req, res) => {
     password.length < 1 ||
     password.length > 200
   ) {
-    // Same generic message as a wrong password — don't reveal which part was invalid.
+    // Same generic message as a wrong password - don't reveal which part was invalid.
     return res.status(401).json({ error: 'Invalid ID number or password.' });
   }
 

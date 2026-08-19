@@ -16,7 +16,7 @@ HTML/CSS/JS on the frontend (no build step required).
 - **Auth:** express-session (server-side sessions stored in Postgres via
   `connect-pg-simple`), bcrypt password hashing
 - **File uploads:** Multer (sticker application documents)
-- **Frontend:** Static HTML/CSS/vanilla JS served by Express — no framework,
+- **Frontend:** Static HTML/CSS/vanilla JS served by Express - no framework,
   no build step, so it deploys as one simple web service
 
 ## Project structure
@@ -42,7 +42,7 @@ mapua-parking/
 
 ## Local setup
 
-1. **Install Postgres** locally (or use a free hosted instance — Render,
+1. **Install Postgres** locally (or use a free hosted instance - Render,
    Neon, Supabase all work).
 2. **Clone the repo and install dependencies:**
    ```bash
@@ -53,8 +53,8 @@ mapua-parking/
    cp .env.example .env
    ```
    Edit `.env` and set:
-   - `DATABASE_URL` — your local or hosted Postgres connection string
-   - `SESSION_SECRET` — generate one with:
+   - `DATABASE_URL` - your local or hosted Postgres connection string
+   - `SESSION_SECRET` - generate one with:
      ```bash
      node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
      ```
@@ -78,10 +78,10 @@ mapua-parking/
    ```
    Visit `http://localhost:3000/login.html`.
 
-## Deploying live (Render — free tier)
+## Deploying live (Render - free tier)
 
 Render can host the web service and a free Postgres database together,
-auto-deploying from your GitHub repo on every push — a good fit for a group
+auto-deploying from your GitHub repo on every push - a good fit for a group
 project.
 
 1. **Push this repo to GitHub** (see "Group workflow" below).
@@ -90,7 +90,7 @@ project.
 3. **Create a Web Service** on Render, connected to your GitHub repo:
    - Build command: `npm install`
    - Start command: `node db/migrate.js && node db/seed.js && npm start`
-     (only include `node db/seed.js` on the **first** deploy — remove it
+     (only include `node db/seed.js` on the **first** deploy - remove it
      afterwards so you don't reset data on every deploy)
    - Environment variables:
      - `DATABASE_URL` → paste the Internal Database URL from step 2
@@ -99,7 +99,7 @@ project.
 4. Render will give you a live `https://your-app.onrender.com` URL.
 
 Free-tier note: Render's free web services spin down after inactivity and
-take ~30–60 seconds to wake up on the next request — normal for a free tier
+take ~30–60 seconds to wake up on the next request - normal for a free tier
 and fine for a class project/demo.
 
 ## Group workflow (GitHub)
@@ -110,9 +110,9 @@ and fine for a class project/demo.
    git checkout -b feature/support-tickets
    ```
 3. Each person runs their own local Postgres (or shares one free hosted dev
-   database — just don't commit its credentials).
+   database - just don't commit its credentials).
 4. Open pull requests into `main`; Render auto-deploys `main` on merge.
-5. **Never commit `.env`** — it's already in `.gitignore`. Share secrets
+5. **Never commit `.env`** - it's already in `.gitignore`. Share secrets
    (like `SESSION_SECRET`) through a private channel, not through git.
 
 ## Security notes
@@ -123,7 +123,7 @@ what's intentionally left as a known limitation for a project of this scope:
 **In place:**
 - Passwords hashed with bcrypt (cost factor 10–12), never stored or logged
   in plaintext
-- Server-side sessions (not JWTs in localStorage) — session data lives in
+- Server-side sessions (not JWTs in localStorage) - session data lives in
   Postgres, cookie only holds a signed session ID; cookies are `httpOnly`,
   `sameSite=lax`, and `secure` in production
 - Session regenerated on login (prevents session fixation)
@@ -131,10 +131,10 @@ what's intentionally left as a known limitation for a project of this scope:
   unknown users) and a generic error message, so the endpoint doesn't reveal
   which ID numbers are registered
 - All admin routes check `role === 'admin'` server-side (`middleware/auth.js`)
-  — the frontend hiding a button is never the actual access control
+  - the frontend hiding a button is never the actual access control
 - Every reservation/vehicle lookup is scoped to `req.session.user.id` server
   side, preventing IDOR (one user reading/cancelling another's data)
-- All SQL uses parameterized queries — no string-built SQL anywhere
+- All SQL uses parameterized queries - no string-built SQL anywhere
 - Input validation with allowlists/regex on every write endpoint (ID number
   format, plate format, year, date/time format, relation dropdown, etc.),
   not just "is it present"
@@ -147,7 +147,7 @@ what's intentionally left as a known limitation for a project of this scope:
 - Security headers via Helmet: Content-Security-Policy, X-Frame-Options
   (clickjacking), X-Content-Type-Options: nosniff, HSTS in production
 - Centralized error handler: no stack traces, SQL errors, or internal
-  details ever reach the client — errors are logged server-side only
+  details ever reach the client - errors are logged server-side only
 - Request bodies capped at 100kb to reduce trivial DoS surface
 
 **Known limitations (reasonable for a class project, worth knowing about):**
@@ -161,16 +161,16 @@ what's intentionally left as a known limitation for a project of this scope:
   uploaded files are never executed and are served as static downloads, but
   a package like `file-type` would close this gap if it mattered more.
 - **No email verification / password reset flow.** The "Forgot Password?"
-  link on the login page is a placeholder — there's no email service wired
+  link on the login page is a placeholder - there's no email service wired
   up. Fine for a demo; a real deployment needs this.
 - **No account lockout beyond rate limiting.** Ten failed attempts per 15
   minutes slows brute-forcing but doesn't lock the account outright.
-- **No 2FA.** Not implemented — reasonable for this scope.
+- **No 2FA.** Not implemented - reasonable for this scope.
 - **Free-tier hosting caveats.** Render's free Postgres tier has storage/row
-  limits and the free web service sleeps when idle — fine for a class
+  limits and the free web service sleeps when idle - fine for a class
   project, not for anything with real users at scale.
 
-Security is a process, not a checkbox — this covers the standard risks for
+Security is a process, not a checkbox - this covers the standard risks for
 an app like this (OWASP Top 10-style: injection, broken auth, broken access
 control, security misconfiguration, etc.) but a real production deployment
 handling real personal data (IDs, license photos) would warrant a proper
@@ -184,10 +184,10 @@ shapes.
 
 | Method | Path | Auth | Purpose |
 |---|---|---|---|
-| POST | /api/auth/register | — | Create account (used by sticker application flow) |
-| POST | /api/auth/login | — | Log in |
+| POST | /api/auth/register | - | Create account (used by sticker application flow) |
+| POST | /api/auth/login | - | Log in |
 | POST | /api/auth/logout | user | Log out |
-| GET | /api/auth/me | — | Current session user |
+| GET | /api/auth/me | - | Current session user |
 | GET | /api/lots | user | List parking lots with occupancy |
 | GET | /api/lots/:id/slots | user | Slot map for a lot |
 | POST | /api/reservations | user | Book a slot |
@@ -215,7 +215,7 @@ status control, support tickets both sides.
 
 **Reasonable next steps for your group to divide up:**
 - Wire up a real payment step (the design shows "Submit & Proceed to
-  Payment" — currently a placeholder message)
+  Payment" - currently a placeholder message)
 - Entry/exit gate simulation writing to `entry_exit_logs` (the admin
   dashboard reads from this table but nothing writes to it yet)
 - Email notifications on application approval/rejection

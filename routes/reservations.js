@@ -146,7 +146,7 @@ router.get('/history', requireLogin, async (req, res) => {
   }
 });
 
-// POST /api/reservations/:id/extend  { extra_minutes }  — default 60 if omitted
+// POST /api/reservations/:id/extend  { extra_minutes }  - default 60 if omitted
 const MAX_EXTEND_MINUTES = 180; // cap a single extension request (3 hours) to prevent abuse
 router.post('/:id/extend', requireLogin, async (req, res) => {
   let extraMinutes = Number.parseInt(req.body.extra_minutes, 10);
@@ -182,7 +182,7 @@ router.post('/:id/extend', requireLogin, async (req, res) => {
     const newEnd = newEndRes.rows[0].new_end;
 
     if (newEnd <= reservation.end_time) {
-      // Interval math wrapped past midnight — keep reservations same-day/simple.
+      // Interval math wrapped past midnight - keep reservations same-day/simple.
       await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Cannot extend past midnight. Please book a new reservation instead.' });
     }

@@ -72,7 +72,7 @@ router.post('/slots/:slotId/status', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/slots/:slotId/entry — gate simulation: log a vehicle
+// POST /api/admin/slots/:slotId/entry - gate simulation: log a vehicle
 // entering and mark its slot occupied. Requires the slot to currently have
 // an ongoing reservation (i.e. it's expected).
 router.post('/slots/:slotId/entry', requireAdmin, async (req, res) => {
@@ -115,7 +115,7 @@ router.post('/slots/:slotId/entry', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/slots/:slotId/exit — gate simulation: log a vehicle
+// POST /api/admin/slots/:slotId/exit - gate simulation: log a vehicle
 // leaving, complete its reservation, and free the slot.
 router.post('/slots/:slotId/exit', requireAdmin, async (req, res) => {
   const client = await pool.connect();

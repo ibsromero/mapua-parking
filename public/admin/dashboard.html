@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Admin Dashboard — Mapúa Parking</title>
+<title>Admin Dashboard - Mapúa Parking</title>
 <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
 <div class="sidebar">
-  <div class="brand">🅿️ Admin<br/><span style="font-size:12px;font-weight:400;color:var(--text-muted);">Management Portal</span></div>
+  <div class="brand" style="display:flex;align-items:center;gap:10px;"><span class="brand-mark">P</span><span>Admin<br/><span style="font-size:12px;font-weight:400;color:var(--text-muted);">Management Portal</span></span></div>
   <nav>
     <a href="/admin/dashboard.html" class="active">Dashboard</a>
     <a href="/admin/applications.html">App Reviews</a>
@@ -22,21 +22,21 @@
 
 <div class="admin-layout">
   <h1>Dashboard Overview</h1>
-  <p class="muted">Mapúa University — Main Campus Parking Status</p>
+  <p class="muted">Mapúa University - Main Campus Parking Status</p>
 
   <div class="grid-3" style="margin:24px 0;">
     <div class="card stat-card">
       <h3>Total Occupancy</h3>
-      <div class="value" id="occPct">—</div>
+      <div class="value" id="occPct">-</div>
       <p class="muted" id="occDetail" style="margin:4px 0 0;font-size:13px;"></p>
     </div>
     <div class="card stat-card">
       <h3>Active Reservations</h3>
-      <div class="value" id="activeCount">—</div>
+      <div class="value" id="activeCount">-</div>
     </div>
     <div class="card stat-card">
       <h3>Pending Applications</h3>
-      <div class="value" id="pendingCount">—</div>
+      <div class="value" id="pendingCount">-</div>
       <a href="/admin/applications.html" style="font-size:13px;">Review All →</a>
     </div>
   </div>

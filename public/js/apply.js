@@ -7,7 +7,7 @@ document.querySelectorAll('.upload-box').forEach(box => {
     const box = document.querySelector(`.upload-box[data-for="${id}"]`);
     if (e.target.files[0]) {
       files[id] = e.target.files[0];
-      box.textContent = `✓ ${e.target.files[0].name}`;
+      box.innerHTML = `<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> ${esc(e.target.files[0].name)}`;
       box.classList.add('filled');
     }
   });
@@ -41,7 +41,7 @@ function renderReview() {
       </div>
       <div>
         <strong>Vehicle Info</strong>
-        <p>${esc(val('plate_no'))} — ${esc(val('make'))} ${esc(val('model'))}<br/>${esc(val('color'))}, ${esc(val('year'))}</p>
+        <p>${esc(val('plate_no'))} - ${esc(val('make'))} ${esc(val('model'))}<br/>${esc(val('color'))}, ${esc(val('year'))}</p>
       </div>
     </div>`;
 }

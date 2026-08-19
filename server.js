@@ -23,7 +23,7 @@ if (!process.env.SESSION_SECRET) {
   process.exit(1);
 }
 
-// Render (and most PaaS) sit behind a reverse proxy — needed for secure
+// Render (and most PaaS) sit behind a reverse proxy - needed for secure
 // cookies and correct client IPs (used by the rate limiter) to work.
 app.set('trust proxy', 1);
 
@@ -50,7 +50,7 @@ app.use(
   session({
     store: new pgSession({ pool, tableName: 'session', createTableIfMissing: false }), // table created by db/schema.sql migration
     name: 'mp.sid',
-    secret: process.env.SESSION_SECRET, // required — see .env.example; app refuses to start without it (below)
+    secret: process.env.SESSION_SECRET, // required - see .env.example; app refuses to start without it (below)
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -62,7 +62,7 @@ app.use(
   })
 );
 
-// Generic rate limiting for the whole API — tighter limit specifically on
+// Generic rate limiting for the whole API - tighter limit specifically on
 // /api/auth/login below to slow down credential-stuffing / brute force.
 app.use('/api', rateLimit({ windowMs: 15 * 60 * 1000, max: 300, standardHeaders: true, legacyHeaders: false }));
 const loginLimiter = rateLimit({
@@ -74,7 +74,7 @@ const loginLimiter = rateLimit({
 });
 app.use('/api/auth/login', loginLimiter);
 
-// Root path has no page of its own — send visitors straight to login.
+// Root path has no page of its own - send visitors straight to login.
 app.get('/', (req, res) => res.redirect('/login.html'));
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { index: false, dotfiles: 'deny' }));
@@ -86,7 +86,7 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/support', supportRoutes);
-// reservations.js also exposes /api/lots/* — mount it there too
+// reservations.js also exposes /api/lots/* - mount it there too
 app.use('/api', reservationRoutes);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
@@ -94,7 +94,7 @@ app.get('/health', (req, res) => res.json({ ok: true }));
 // 404 for unknown API routes (keep JSON, don't leak stack/HTML)
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
 
-// Central error handler — never leak stack traces or internal details to the client.
+// Central error handler - never leak stack traces or internal details to the client.
 app.use((err, req, res, next) => {
   console.error(err); // full detail server-side only
   if (err.message && err.message.includes('Only PDF, JPG, PNG')) {

@@ -17,11 +17,11 @@ async function loadApps(status) {
       <td>${esc(a.id_number)}</td>
       <td>${esc((a.applicant_type || '').replace('_', '-'))}</td>
       <td>${esc(a.make || '')} ${esc(a.model || '')}</td>
-      <td>${esc(a.plate_no || '—')}</td>
+      <td>${esc(a.plate_no || '-')}</td>
       <td><span class="badge ${badgeClass(a.status)}">${esc(a.status)}</span></td>
       <td>
         ${a.status === 'pending' ? `
-          <button class="btn" style="padding:6px 10px;font-size:12px;" data-decide-id="${a.id}" data-decision="rejected">Reject</button>
+          <button class="btn btn-danger" style="padding:6px 10px;font-size:12px;" data-decide-id="${a.id}" data-decision="rejected">Reject</button>
           <button class="btn btn-primary" style="padding:6px 10px;font-size:12px;" data-decide-id="${a.id}" data-decision="approved">Approve</button>
         ` : '<span class="muted" style="font-size:12px;">Reviewed</span>'}
       </td>
@@ -40,7 +40,7 @@ async function decide(id, decision) {
 }
 
 // Approve/Reject buttons are re-rendered on every loadApps() call, so this
-// listener is delegated on the table body once rather than bound per-row —
+// listener is delegated on the table body once rather than bound per-row -
 // data attributes replace the inline onclick that CSP blocks.
 document.getElementById('appRows').addEventListener('click', (e) => {
   const el = e.target.closest('[data-decide-id]');

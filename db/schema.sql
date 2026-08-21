@@ -55,7 +55,10 @@ CREATE TABLE IF NOT EXISTS parking_slots (
   lot_id INTEGER NOT NULL REFERENCES parking_lots(id) ON DELETE CASCADE,
   row_label VARCHAR(10) NOT NULL,     -- Row A, Row B1, etc
   slot_number VARCHAR(10) NOT NULL,   -- A1, B8, etc
-  status VARCHAR(20) NOT NULL DEFAULT 'available', -- available | reserved | occupied | maintenance
+  status VARCHAR(20) NOT NULL DEFAULT 'available', -- operational status only: available | maintenance
+  -- (booking state -- "reserved"/"occupied" -- is computed from the reservations
+  -- table for a given date/time, not stored here. See routes/reservations.js
+  -- and routes/admin.js for how slot availability is actually determined.)
   UNIQUE(lot_id, slot_number)
 );
 
@@ -68,8 +71,17 @@ CREATE TABLE IF NOT EXISTS reservations (
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'ongoing', -- ongoing | completed | cancelled
+  checked_in_at TIMESTAMP, -- set when the admin logs a gate "entry" for this reservation; distinguishes reserved (not yet arrived) from occupied (physically parked) for the same slot/date.
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
+
+-- Idempotent migration for databases created before checked_in_at existed.
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS checked_in_at TIMESTAMP;
+
+-- One-time cleanup: older schema versions stored "reserved"/"occupied" directly
+-- on parking_slots. That state is now computed from reservations instead, so
+-- reset any leftover values -- safe to run repeatedly, no-op once clean.
+UPDATE parking_slots SET status = 'available' WHERE status NOT IN ('available', 'maintenance');
 
 CREATE TABLE IF NOT EXISTS support_tickets (
   id SERIAL PRIMARY KEY,

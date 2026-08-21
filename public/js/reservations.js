@@ -93,6 +93,15 @@ document.getElementById('bookForm').addEventListener('submit', async (e) => {
   const okEl = document.getElementById('bookSuccess');
   errEl.style.display = 'none';
   okEl.style.display = 'none';
+
+  const { date, start, end } = currentWindow();
+  const slotLabel = document.getElementById('selectedSlotLabel').textContent;
+  const vehicleLabel = document.getElementById('vehicle_id').selectedOptions[0]?.textContent || '';
+  const confirmed = confirm(
+    `Confirm this reservation?\n\nSlot: ${slotLabel}\nDate: ${date}\nTime: ${start} - ${end}\nVehicle: ${vehicleLabel}`
+  );
+  if (!confirmed) return;
+
   const btn = document.getElementById('reserveBtn');
   btn.disabled = true;
   try {
@@ -106,7 +115,7 @@ document.getElementById('bookForm').addEventListener('submit', async (e) => {
         end_time: document.getElementById('end_time').value
       })
     });
-    okEl.textContent = 'Slot reserved! Redirecting to your dashboard…';
+    okEl.textContent = 'Slot reserved! Redirecting to your dashboard...';
     okEl.style.display = 'block';
     setTimeout(() => (window.location.href = '/dashboard.html'), 1200);
   } catch (err) {

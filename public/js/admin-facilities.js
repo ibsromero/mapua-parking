@@ -1,6 +1,7 @@
 let lots = [];
 let currentLotId = null;
 let currentSlots = [];
+let selectedSlotId = null;
 
 async function loadLots() {
   const { lots: l } = await api('/api/lots');
@@ -11,6 +12,7 @@ async function loadLots() {
     tab.addEventListener('click', () => {
       tabs.querySelectorAll('.lot-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
+      selectedSlotId = null;
       loadSlots(tab.dataset.id);
     });
   });
@@ -20,17 +22,27 @@ async function loadLots() {
 async function loadSlots(lotId) {
   currentLotId = lotId;
   const grid = document.getElementById('slotGrid');
-  grid.innerHTML = '<p class="muted">Loading…</p>';
+  grid.innerHTML = '<p class="muted">Loading...</p>';
   const { slots } = await api(`/api/admin/slots/${lotId}`);
   currentSlots = slots;
-  grid.innerHTML = slots.map(s => `<div class="slot-mini ${s.status}" data-id="${s.id}">${esc(s.slot_number)}<br/><span style="font-size:11px;font-weight:400;text-transform:capitalize;">${esc(s.status)}</span></div>`).join('');
+  grid.innerHTML = slots.map(s => `<div class="slot-mini ${s.status} ${String(s.id) === String(selectedSlotId) ? 'picked' : ''}" data-id="${s.id}">${esc(s.slot_number)}<br/><span style="font-size:11px;font-weight:400;text-transform:capitalize;">${esc(s.status)}</span></div>`).join('');
   grid.querySelectorAll('.slot-mini').forEach(el => {
     el.addEventListener('click', () => {
       grid.querySelectorAll('.slot-mini').forEach(s => s.classList.remove('picked'));
       el.classList.add('picked');
+      selectedSlotId = el.dataset.id;
       showDetail(currentSlots.find(s => String(s.id) === el.dataset.id));
     });
   });
+
+  // If the slot currently shown in the detail panel is one of the ones we
+  // just refreshed, re-render its detail too -- otherwise the panel keeps
+  // showing stale buttons (e.g. still "Log Entry") after an action that
+  // changed that same slot's state, until the admin clicks it again.
+  if (selectedSlotId) {
+    const updated = currentSlots.find(s => String(s.id) === String(selectedSlotId));
+    if (updated) showDetail(updated);
+  }
 }
 
 function showDetail(slot) {
@@ -77,6 +89,8 @@ function showDetail(slot) {
 }
 
 async function logGate(slotId, action) {
+  const verb = action === 'entry' ? 'log this vehicle as arrived (entry)' : 'log this vehicle as departed (exit)';
+  if (!confirm(`Are you sure you want to ${verb} for this slot?`)) return;
   try {
     await api(`/api/admin/slots/${slotId}/${action}`, { method: 'POST' });
     loadSlots(currentLotId);

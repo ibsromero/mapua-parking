@@ -21,3 +21,8 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     btn.textContent = 'Log In';
   }
 });
+
+document.querySelector('[data-forgot-password]').addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('forgotPasswordNote').style.display = 'block';
+});

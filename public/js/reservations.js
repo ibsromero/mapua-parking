@@ -2,6 +2,14 @@ let lots = [];
 let currentLotId = null;
 let selectedSlotId = null;
 
+function currentWindow() {
+  return {
+    date: document.getElementById('reservation_date').value,
+    start: document.getElementById('start_time').value,
+    end: document.getElementById('end_time').value
+  };
+}
+
 async function loadLots() {
   const { lots: l } = await api('/api/lots');
   lots = l;
@@ -24,8 +32,10 @@ async function loadSlots(lotId) {
   selectedSlotId = null;
   updateSummary();
   const grid = document.getElementById('slotGrid');
-  grid.innerHTML = '<p class="muted">Loading slots…</p>';
-  const { slots } = await api(`/api/lots/${lotId}/slots`);
+  grid.innerHTML = '<p class="muted">Loading slots...</p>';
+  const { date, start, end } = currentWindow();
+  const qs = new URLSearchParams({ date, start, end }).toString();
+  const { slots } = await api(`/api/lots/${lotId}/slots?${qs}`);
   grid.innerHTML = slots.map(s => {
     const cls = s.status === 'available' ? 'available' : s.status;
     return `<div class="slot ${cls}" data-id="${s.id}" data-number="${esc(s.slot_number)}">${esc(s.slot_number)}</div>`;
@@ -39,6 +49,15 @@ async function loadSlots(lotId) {
     });
   });
 }
+
+// Changing the date or time window changes which slots are actually free,
+// so re-fetch the map (and drop the current selection, since the slot the
+// user had picked may no longer be free -- or a previously-taken one now is).
+['reservation_date', 'start_time', 'end_time'].forEach(id => {
+  document.getElementById(id).addEventListener('change', () => {
+    if (currentLotId) loadSlots(currentLotId);
+  });
+});
 
 function updateSummary(number) {
   document.getElementById('selectedSlotLabel').textContent = number || 'None';
@@ -60,7 +79,11 @@ async function loadVehicles() {
 
   notice.style.display = 'none';
   form.style.display = 'block';
-  sel.innerHTML = eligible.map(v => `<option value="${v.id}">${esc(v.plate_no)} - ${esc(v.make || '')} ${esc(v.model || '')}</option>`).join('');
+  sel.innerHTML = eligible.map(v => {
+    const makeModel = [v.make, v.model].filter(Boolean).join(' ');
+    const label = makeModel ? `${v.plate_no} - ${makeModel}` : v.plate_no;
+    return `<option value="${v.id}">${esc(label)}</option>`;
+  }).join('');
   return true;
 }
 

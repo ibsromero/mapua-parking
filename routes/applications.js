@@ -120,4 +120,34 @@ router.post('/:id/decision', requireAdmin, async (req, res) => {
   }
 });
 
+// GET /api/applications/:id/documents/:field - stream one uploaded document.
+// :field selects which DB column to read from (whitelisted below, never a
+// raw filesystem path from the client), and only the applicant themselves
+// or an admin may fetch it -- these are personal ID scans, not public files.
+const DOC_FIELDS = ['or_cr_file', 'drivers_license_file', 'university_id_file'];
+router.get('/:id/documents/:field', requireLogin, async (req, res) => {
+  const { field } = req.params;
+  if (!DOC_FIELDS.includes(field)) return res.status(400).json({ error: 'Invalid document field.' });
+
+  try {
+    const { rows } = await pool.query('SELECT * FROM sticker_applications WHERE id = $1', [req.params.id]);
+    const application = rows[0];
+    if (!application) return res.status(404).json({ error: 'Application not found.' });
+
+    const isOwner = application.user_id === req.session.user.id;
+    const isAdmin = req.session.user.role === 'admin';
+    if (!isOwner && !isAdmin) return res.status(403).json({ error: 'Not authorized to view this document.' });
+
+    const filename = application[field];
+    if (!filename) return res.status(404).json({ error: 'No file was uploaded for this document.' });
+
+    res.sendFile(path.join(__dirname, '..', 'uploads', filename), (err) => {
+      if (err && !res.headersSent) res.status(404).json({ error: 'File not found on server.' });
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to load document.' });
+  }
+});
+
 module.exports = router;

@@ -77,7 +77,11 @@ app.use('/api/auth/login', loginLimiter);
 // Root path has no page of its own - send visitors straight to login.
 app.get('/', (req, res) => res.redirect('/login.html'));
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { index: false, dotfiles: 'deny' }));
+// Uploaded sticker-application documents (driver's license, school ID, OR/CR)
+// are never served as plain static files -- they're personal ID scans, so
+// access goes through the protected route in routes/applications.js instead
+// (GET /api/applications/:id/documents/:field), which checks the requester
+// is either the applicant or an admin before streaming the file.
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/api/auth', authRoutes);

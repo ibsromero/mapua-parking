@@ -2,13 +2,17 @@ function badgeClass(status) {
   return { pending: 'badge-pending', approved: 'badge-approved', rejected: 'badge-rejected' }[status] || 'badge-pending';
 }
 
+function docLink(appId, field, label) {
+  return `<a href="/api/applications/${appId}/documents/${field}" target="_blank" rel="noopener" style="font-size:12px;display:block;">${esc(label)}</a>`;
+}
+
 async function loadApps(status) {
   const rowsEl = document.getElementById('appRows');
-  rowsEl.innerHTML = '<tr><td colspan="7" class="muted">Loading…</td></tr>';
+  rowsEl.innerHTML = '<tr><td colspan="8" class="muted">Loading...</td></tr>';
   const qs = status ? `?status=${encodeURIComponent(status)}` : '';
   const { applications } = await api('/api/applications' + qs);
   if (!applications.length) {
-    rowsEl.innerHTML = '<tr><td colspan="7" class="muted">No applications found.</td></tr>';
+    rowsEl.innerHTML = '<tr><td colspan="8" class="muted">No applications found.</td></tr>';
     return;
   }
   rowsEl.innerHTML = applications.map(a => `
@@ -18,6 +22,11 @@ async function loadApps(status) {
       <td>${esc((a.applicant_type || '').replace('_', '-'))}</td>
       <td>${esc(a.make || '')} ${esc(a.model || '')}</td>
       <td>${esc(a.plate_no || '-')}</td>
+      <td>
+        ${a.or_cr_file ? docLink(a.id, 'or_cr_file', 'OR/CR') : '<span class="muted" style="font-size:12px;">OR/CR: none</span>'}
+        ${a.drivers_license_file ? docLink(a.id, 'drivers_license_file', "Driver's License") : '<span class="muted" style="font-size:12px;">License: none</span>'}
+        ${a.university_id_file ? docLink(a.id, 'university_id_file', 'University ID') : '<span class="muted" style="font-size:12px;">ID: none</span>'}
+      </td>
       <td><span class="badge ${badgeClass(a.status)}">${esc(a.status)}</span></td>
       <td>
         ${a.status === 'pending' ? `

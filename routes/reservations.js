@@ -4,18 +4,39 @@ const { requireLogin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/lots  -> list lots with occupancy summary
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
+
+function todayStr() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+// GET /api/lots  -> list lots with TODAY's occupancy summary (a slot counts
+// as unavailable right now if it's under maintenance or has an ongoing
+// reservation covering the current moment -- not a stored flag that never
+// resets once a booking is made for some other day).
 router.get('/lots', requireLogin, async (req, res) => {
   try {
-    const { rows } = await pool.query(`
-      SELECT l.id, l.name,
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const nowTime = now.toTimeString().slice(0, 8);
+    const { rows } = await pool.query(
+      `SELECT l.id, l.name,
         COUNT(s.id) AS total,
-        COUNT(s.id) FILTER (WHERE s.status = 'available') AS available
+        COUNT(s.id) FILTER (
+          WHERE s.status != 'maintenance'
+            AND NOT EXISTS (
+              SELECT 1 FROM reservations r
+              WHERE r.slot_id = s.id AND r.status = 'ongoing'
+                AND r.reservation_date = $1 AND r.start_time <= $2 AND r.end_time > $2
+            )
+        ) AS available
       FROM parking_lots l
       LEFT JOIN parking_slots s ON s.lot_id = l.id
       GROUP BY l.id, l.name
-      ORDER BY l.name
-    `);
+      ORDER BY l.name`,
+      [today, nowTime]
+    );
     res.json({ lots: rows });
   } catch (err) {
     console.error(err);
@@ -23,14 +44,29 @@ router.get('/lots', requireLogin, async (req, res) => {
   }
 });
 
-// GET /api/lots/:lotId/slots -> slot map for a lot
+// GET /api/lots/:lotId/slots?date=YYYY-MM-DD&start=HH:MM&end=HH:MM
+// Slot map for a lot, scoped to a specific date/time window -- a slot is
+// only shown "reserved" if a booking actually overlaps the requested window,
+// not forever once anyone has ever booked it for any date.
 router.get('/lots/:lotId/slots', requireLogin, async (req, res) => {
+  const date = DATE_RE.test(String(req.query.date)) ? req.query.date : todayStr();
+  const start = TIME_RE.test(String(req.query.start)) ? req.query.start : '00:00';
+  const end = TIME_RE.test(String(req.query.end)) ? req.query.end : '23:59';
   try {
     const { rows } = await pool.query(
-      `SELECT id, row_label, slot_number, status
-       FROM parking_slots WHERE lot_id = $1
-       ORDER BY row_label, slot_number`,
-      [req.params.lotId]
+      `SELECT s.id, s.row_label, s.slot_number,
+        CASE
+          WHEN s.status = 'maintenance' THEN 'maintenance'
+          WHEN EXISTS (
+            SELECT 1 FROM reservations r
+            WHERE r.slot_id = s.id AND r.status = 'ongoing'
+              AND r.reservation_date = $2 AND r.start_time < $4 AND r.end_time > $3
+          ) THEN 'reserved'
+          ELSE 'available'
+        END AS status
+       FROM parking_slots s WHERE s.lot_id = $1
+       ORDER BY s.row_label, s.slot_number`,
+      [req.params.lotId, date, start, end]
     );
     res.json({ slots: rows });
   } catch (err) {
@@ -38,9 +74,6 @@ router.get('/lots/:lotId/slots', requireLogin, async (req, res) => {
     res.status(500).json({ error: 'Failed to load slots.' });
   }
 });
-
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
 
 // POST /api/reservations  { slot_id, vehicle_id, reservation_date, start_time, end_time }
 router.post('/', requireLogin, async (req, res) => {
@@ -88,15 +121,27 @@ router.post('/', requireLogin, async (req, res) => {
   try {
     await client.query('BEGIN');
 
-    // Lock the slot row so two students can't grab it at once
-    const slotRes = await client.query(
-      'SELECT status FROM parking_slots WHERE id = $1 FOR UPDATE',
-      [slot_id]
-    );
+    // Lock the slot row so two overlapping booking attempts for the same
+    // slot serialize through here rather than racing each other.
+    const slotRes = await client.query('SELECT status FROM parking_slots WHERE id = $1 FOR UPDATE', [slot_id]);
     if (!slotRes.rows[0]) throw new Error('Slot not found.');
-    if (slotRes.rows[0].status !== 'available') {
+    if (slotRes.rows[0].status === 'maintenance') {
       await client.query('ROLLBACK');
-      return res.status(409).json({ error: 'That slot is no longer available.' });
+      return res.status(409).json({ error: 'This slot is under maintenance.' });
+    }
+
+    // Availability is a real overlap check against that specific date/time,
+    // not a single global flag -- a booking for one day must not block the
+    // same slot on every other day forever.
+    const conflict = await client.query(
+      `SELECT id FROM reservations
+       WHERE slot_id = $1 AND status = 'ongoing' AND reservation_date = $2
+         AND start_time < $4 AND end_time > $3`,
+      [slot_id, reservation_date, start_time, end_time]
+    );
+    if (conflict.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'That slot is already booked for an overlapping time on this date.' });
     }
 
     const resRow = await client.query(
@@ -104,8 +149,6 @@ router.post('/', requireLogin, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6, 'ongoing') RETURNING *`,
       [req.session.user.id, slot_id, vId, reservation_date, start_time, end_time]
     );
-
-    await client.query(`UPDATE parking_slots SET status = 'reserved' WHERE id = $1`, [slot_id]);
 
     await client.query('COMMIT');
     res.status(201).json({ reservation: resRow.rows[0] });
@@ -240,7 +283,6 @@ router.post('/:id/cancel', requireLogin, async (req, res) => {
       return res.status(404).json({ error: 'Reservation not found.' });
     }
     await client.query(`UPDATE reservations SET status = 'cancelled' WHERE id = $1`, [reservation.id]);
-    await client.query(`UPDATE parking_slots SET status = 'available' WHERE id = $1`, [reservation.slot_id]);
     await client.query('COMMIT');
     res.json({ ok: true });
   } catch (err) {

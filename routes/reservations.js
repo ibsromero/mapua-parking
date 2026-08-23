@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../db/pool');
 const { requireLogin } = require('../middleware/auth');
+const { sweepExpiredReservations, arrivalStatus, ticketNumber, GRACE_PERIOD_MINUTES } = require('../db/reservationHelpers');
 
 const router = express.Router();
 
@@ -17,6 +18,7 @@ function todayStr() {
 // resets once a booking is made for some other day).
 router.get('/lots', requireLogin, async (req, res) => {
   try {
+    await sweepExpiredReservations(pool);
     const now = new Date();
     const today = now.toISOString().slice(0, 10);
     const nowTime = now.toTimeString().slice(0, 8);
@@ -53,6 +55,7 @@ router.get('/lots/:lotId/slots', requireLogin, async (req, res) => {
   const start = TIME_RE.test(String(req.query.start)) ? req.query.start : '00:00';
   const end = TIME_RE.test(String(req.query.end)) ? req.query.end : '23:59';
   try {
+    await sweepExpiredReservations(pool);
     const { rows } = await pool.query(
       `SELECT s.id, s.row_label, s.slot_number,
         CASE
@@ -120,6 +123,7 @@ router.post('/', requireLogin, async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    await sweepExpiredReservations(client);
 
     // Lock the slot row so two overlapping booking attempts for the same
     // slot serialize through here rather than racing each other.
@@ -151,7 +155,10 @@ router.post('/', requireLogin, async (req, res) => {
     );
 
     await client.query('COMMIT');
-    res.status(201).json({ reservation: resRow.rows[0] });
+    res.status(201).json({
+      reservation: { ...resRow.rows[0], ticket_number: ticketNumber(resRow.rows[0].id) },
+      grace_period_minutes: GRACE_PERIOD_MINUTES
+    });
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
@@ -164,6 +171,7 @@ router.post('/', requireLogin, async (req, res) => {
 // GET /api/reservations/active -> current user's active reservation
 router.get('/active', requireLogin, async (req, res) => {
   try {
+    await sweepExpiredReservations(pool);
     const { rows } = await pool.query(
       `SELECT r.*, s.slot_number, l.name AS lot_name, v.plate_no
        FROM reservations r
@@ -174,7 +182,14 @@ router.get('/active', requireLogin, async (req, res) => {
        ORDER BY r.created_at DESC LIMIT 1`,
       [req.session.user.id]
     );
-    res.json({ reservation: rows[0] || null });
+    const reservation = rows[0]
+      ? {
+          ...rows[0],
+          ticket_number: ticketNumber(rows[0].id),
+          arrival_status: arrivalStatus(rows[0].checked_in_at, rows[0].reservation_date, rows[0].start_time)
+        }
+      : null;
+    res.json({ reservation, grace_period_minutes: GRACE_PERIOD_MINUTES });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to load active reservation.' });
@@ -184,6 +199,7 @@ router.get('/active', requireLogin, async (req, res) => {
 // GET /api/reservations/history
 router.get('/history', requireLogin, async (req, res) => {
   try {
+    await sweepExpiredReservations(pool);
     const { rows } = await pool.query(
       `SELECT r.*, s.slot_number, l.name AS lot_name
        FROM reservations r
@@ -193,7 +209,12 @@ router.get('/history', requireLogin, async (req, res) => {
        ORDER BY r.reservation_date DESC, r.start_time DESC`,
       [req.session.user.id]
     );
-    res.json({ reservations: rows });
+    const reservations = rows.map((r) => ({
+      ...r,
+      ticket_number: ticketNumber(r.id),
+      arrival_status: arrivalStatus(r.checked_in_at, r.reservation_date, r.start_time)
+    }));
+    res.json({ reservations });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to load history.' });

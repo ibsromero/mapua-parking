@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS users (
   course_year VARCHAR(100),                    -- if student
   school_dept VARCHAR(100),                    -- if faculty/employee
   password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(20) NOT NULL DEFAULT 'user',    -- user | admin
+  role VARCHAR(20) NOT NULL DEFAULT 'user',    -- user | admin | guard
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -40,10 +40,14 @@ CREATE TABLE IF NOT EXISTS sticker_applications (
   drivers_license_file VARCHAR(255),
   university_id_file VARCHAR(255),
   rules_acknowledged BOOLEAN NOT NULL DEFAULT FALSE,
+  rejection_reason TEXT,
   submitted_at TIMESTAMP NOT NULL DEFAULT NOW(),
   reviewed_at TIMESTAMP,
   reviewed_by INTEGER REFERENCES users(id)
 );
+
+-- Idempotent migration for databases created before rejection_reason existed.
+ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
 
 CREATE TABLE IF NOT EXISTS parking_lots (
   id SERIAL PRIMARY KEY,
@@ -70,7 +74,7 @@ CREATE TABLE IF NOT EXISTS reservations (
   reservation_date DATE NOT NULL,
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
-  status VARCHAR(20) NOT NULL DEFAULT 'ongoing', -- ongoing | completed | cancelled
+  status VARCHAR(20) NOT NULL DEFAULT 'ongoing', -- ongoing | completed | cancelled | forfeited
   checked_in_at TIMESTAMP, -- set when the admin logs a gate "entry" for this reservation; distinguishes reserved (not yet arrived) from occupied (physically parked) for the same slot/date.
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

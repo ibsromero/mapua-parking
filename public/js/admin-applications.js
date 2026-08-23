@@ -27,7 +27,10 @@ async function loadApps(status) {
         ${a.drivers_license_file ? docLink(a.id, 'drivers_license_file', "Driver's License") : '<span class="muted" style="font-size:12px;">License: none</span>'}
         ${a.university_id_file ? docLink(a.id, 'university_id_file', 'University ID') : '<span class="muted" style="font-size:12px;">ID: none</span>'}
       </td>
-      <td><span class="badge ${badgeClass(a.status)}">${esc(a.status)}</span></td>
+      <td>
+        <span class="badge ${badgeClass(a.status)}">${esc(a.status)}</span>
+        ${a.status === 'rejected' && a.rejection_reason ? `<div class="muted" style="font-size:12px;margin-top:4px;max-width:180px;">${esc(a.rejection_reason)}</div>` : ''}
+      </td>
       <td>
         ${a.status === 'pending' ? `
           <button class="btn btn-danger" style="padding:6px 10px;font-size:12px;" data-decide-id="${a.id}" data-decision="rejected">Reject</button>
@@ -38,9 +41,22 @@ async function loadApps(status) {
 }
 
 async function decide(id, decision) {
-  if (!confirm(`Mark this application as ${decision}?`)) return;
+  let rejection_reason;
+  if (decision === 'rejected') {
+    rejection_reason = prompt('Reason for rejecting this application (shown to the student):');
+    if (rejection_reason === null) return; // cancelled
+    if (!rejection_reason.trim()) {
+      alert('A reason is required when rejecting an application.');
+      return;
+    }
+  } else if (!confirm('Approve this application?')) {
+    return;
+  }
   try {
-    await api(`/api/applications/${id}/decision`, { method: 'POST', body: JSON.stringify({ decision }) });
+    await api(`/api/applications/${id}/decision`, {
+      method: 'POST',
+      body: JSON.stringify({ decision, rejection_reason })
+    });
     const active = document.querySelector('#filterTabs .btn.active').dataset.status;
     loadApps(active);
   } catch (e) {

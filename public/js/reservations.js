@@ -98,14 +98,14 @@ document.getElementById('bookForm').addEventListener('submit', async (e) => {
   const slotLabel = document.getElementById('selectedSlotLabel').textContent;
   const vehicleLabel = document.getElementById('vehicle_id').selectedOptions[0]?.textContent || '';
   const confirmed = confirm(
-    `Confirm this reservation?\n\nSlot: ${slotLabel}\nDate: ${date}\nTime: ${start} - ${end}\nVehicle: ${vehicleLabel}`
+    `Confirm this reservation?\n\nSlot: ${slotLabel}\nDate: ${date}\nTime: ${start} - ${end}\nVehicle: ${vehicleLabel}\n\nIf you don't check in within the grace period after your start time, this reservation is automatically forfeited.`
   );
   if (!confirmed) return;
 
   const btn = document.getElementById('reserveBtn');
   btn.disabled = true;
   try {
-    await api('/api/reservations', {
+    const { reservation, grace_period_minutes } = await api('/api/reservations', {
       method: 'POST',
       body: JSON.stringify({
         slot_id: selectedSlotId,
@@ -115,9 +115,9 @@ document.getElementById('bookForm').addEventListener('submit', async (e) => {
         end_time: document.getElementById('end_time').value
       })
     });
-    okEl.textContent = 'Slot reserved! Redirecting to your dashboard...';
+    okEl.textContent = `Reserved -- ticket ${reservation.ticket_number}. Remember: arrive within ${grace_period_minutes} minutes of your start time or the slot is released. Redirecting to your dashboard...`;
     okEl.style.display = 'block';
-    setTimeout(() => (window.location.href = '/dashboard.html'), 1200);
+    setTimeout(() => (window.location.href = '/dashboard.html'), 2200);
   } catch (err) {
     errEl.textContent = err.message;
     errEl.style.display = 'block';

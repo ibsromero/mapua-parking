@@ -124,8 +124,16 @@ td { padding: 14px 12px; border-top: 1px solid var(--border); font-size: 14px; }
 .slot.occupied { background: #f3f4f6; color: #9ca3af; cursor: not-allowed; }
 .slot.maintenance { background: #fef3c7; color: var(--amber); cursor: not-allowed; }
 
-.stat-card h3 { font-size: 12px; text-transform: uppercase; color: var(--text-muted); margin: 0 0 8px; }
-.stat-card .value { font-size: 32px; font-weight: 800; }
+.stat-bar {
+  display: flex; background: #fff; border: 1px solid var(--border); border-radius: 8px;
+}
+.stat-bar-item {
+  flex: 1; padding: 16px 24px; display: flex; flex-direction: column; gap: 2px;
+}
+.stat-bar-item + .stat-bar-item { border-left: 1px solid var(--border); }
+.stat-bar-label { font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+.stat-bar-value { font-size: 24px; font-weight: 800; }
+.stat-bar-detail { font-size: 12px; color: var(--text-muted); }
 
 .center-page {
   min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;
@@ -156,6 +164,8 @@ td { padding: 14px 12px; border-top: 1px solid var(--border); font-size: 14px; }
   .container { padding: var(--space-4); }
 
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  .stat-bar { flex-direction: column; }
+  .stat-bar-item + .stat-bar-item { border-left: none; border-top: 1px solid var(--border); }
   .slot-grid { grid-template-columns: repeat(2, 1fr) !important; }
 
   /* Booking and Facilities pages use a two-column split panel; stack on narrow screens. */

@@ -10,6 +10,12 @@
     const banner = document.getElementById('stickerBanner');
     const hasApproved = applications.some(a => a.status === 'approved');
     const hasPending = applications.some(a => a.status === 'pending');
+    // Most recent rejected application (if any) that hasn't since been
+    // superseded by a pending/approved one -- so a student who reapplied
+    // after a rejection doesn't keep seeing the old rejection notice.
+    const rejected = !hasApproved && !hasPending
+      ? applications.filter(a => a.status === 'rejected').sort((a, b) => new Date(b.reviewed_at) - new Date(a.reviewed_at))[0]
+      : null;
 
     if (hasApproved) {
       // Nothing to nag about -- no banner needed.
@@ -18,6 +24,16 @@
         <div class="alert alert-info" style="margin:20px 0;">
           <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
           <div><strong>Sticker Application Pending</strong><br/>Your vehicle sticker application is awaiting admin review.</div>
+        </div>`;
+    } else if (rejected) {
+      banner.innerHTML = `
+        <div class="alert alert-warning" style="margin:20px 0;">
+          <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          <div>
+            <strong>Sticker Application Rejected</strong><br/>
+            ${rejected.rejection_reason ? esc(rejected.rejection_reason) : 'No reason was given.'}
+            <a href="/apply.html">Apply again</a>.
+          </div>
         </div>`;
     } else {
       banner.innerHTML = `
@@ -36,19 +52,25 @@
 
   // Active reservation
   try {
-    const { reservation } = await api('/api/reservations/active');
+    const { reservation, grace_period_minutes } = await api('/api/reservations/active');
     const box = document.getElementById('activeReservation');
     if (!reservation) {
       box.innerHTML = `<p class="muted">No active reservation. <a href="/reservations.html">Book a slot</a> to get started.</p>`;
     } else {
+      const arrived = !!reservation.checked_in_at;
       box.innerHTML = `
         <span class="badge badge-ongoing">● Ongoing</span>
         <div class="grid-2" style="margin-top:16px;">
+          <div><label>Ticket #</label><div><code>${esc(reservation.ticket_number)}</code></div></div>
           <div><label>Location</label><div>${esc(reservation.lot_name)}</div></div>
           <div><label>Slot</label><div style="color:var(--maroon);font-weight:700;">#${esc(reservation.slot_number)}</div></div>
           <div><label>Time</label><div id="resTimeLabel">${esc(reservation.start_time?.slice(0,5))} - ${esc(reservation.end_time?.slice(0,5))}</div></div>
           <div><label>Vehicle</label><div>${esc(reservation.plate_no || '-')}</div></div>
         </div>
+        ${arrived
+          ? `<p class="muted" style="margin-top:12px;">Checked in.</p>`
+          : `<div class="alert alert-info" style="margin-top:16px;"><div>If you don't arrive within <strong>${grace_period_minutes} minutes</strong> of your start time, this reservation is automatically forfeited and the slot is released.</div></div>`
+        }
         <p id="extendMsg" class="muted" style="margin-top:12px;display:none;"></p>
         <div style="display:flex;gap:12px;margin-top:20px;">
           <button class="btn btn-danger" style="flex:1;" id="cancelBtn">Cancel</button>

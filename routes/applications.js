@@ -99,18 +99,27 @@ router.get('/', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/applications/:id/decision  { decision: 'approved' | 'rejected' }
+// POST /api/applications/:id/decision  { decision: 'approved' | 'rejected', rejection_reason? }
 router.post('/:id/decision', requireAdmin, async (req, res) => {
   const { decision } = req.body;
   if (!['approved', 'rejected'].includes(decision)) {
     return res.status(400).json({ error: 'Decision must be approved or rejected.' });
   }
+  // Reason is required on rejection so the student knows what to fix -- an
+  // application can't just vanish into "rejected" with no explanation.
+  let rejectionReason = null;
+  if (decision === 'rejected') {
+    rejectionReason = typeof req.body.rejection_reason === 'string' ? req.body.rejection_reason.trim().slice(0, 1000) : '';
+    if (!rejectionReason) {
+      return res.status(400).json({ error: 'A reason is required when rejecting an application.' });
+    }
+  }
   try {
     const { rows } = await pool.query(
       `UPDATE sticker_applications
-       SET status = $1, reviewed_at = NOW(), reviewed_by = $2
-       WHERE id = $3 RETURNING *`,
-      [decision, req.session.user.id, req.params.id]
+       SET status = $1, reviewed_at = NOW(), reviewed_by = $2, rejection_reason = $3
+       WHERE id = $4 RETURNING *`,
+      [decision, req.session.user.id, rejectionReason, req.params.id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Application not found.' });
     res.json({ application: rows[0] });

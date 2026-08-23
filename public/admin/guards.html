@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Guards - Admin</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<div class="navbar">
+  <a class="brand brand-with-logo" href="/admin/dashboard.html"><img src="/images/mapua-logo.png" alt="Mapúa University" class="brand-logo"><span class="brand-tagline">Parking</span> <span class="admin-tag">Admin</span></a>
+  <nav>
+    <a href="/admin/dashboard.html">Dashboard</a>
+    <a href="/admin/applications.html">App Reviews</a>
+    <a href="/admin/facilities.html">Facilities</a>
+    <a href="/admin/support.html">Support</a>
+    <a href="/admin/guards.html" class="active">Guards</a>
+  </nav>
+  <div><a href="#" data-logout class="btn">Logout</a></div>
+</div>
+
+<div class="container" style="max-width:700px;">
+  <h1>Guard Accounts</h1>
+  <p class="muted">Create accounts for gate staff. Guards can only check reservations in and out -- they don't have access to applications, facilities, or support.</p>
+
+  <div class="card" style="margin:20px 0;">
+    <h3 style="margin-top:0;">Add a Guard</h3>
+    <form id="addGuardForm">
+      <div class="grid-2">
+        <div class="field"><label for="full_name">Full Name</label><input id="full_name" placeholder="Last Name, First Name, M.I." required maxlength="150" /></div>
+        <div class="field"><label for="id_number">ID Number</label><input id="id_number" placeholder="e.g. GUARD-0001" required maxlength="20" /></div>
+      </div>
+      <div class="field"><label for="password">Password</label><input id="password" type="password" placeholder="At least 8 characters" required minlength="8" maxlength="200" /></div>
+      <button type="submit" class="btn btn-primary" id="addGuardBtn">Create Guard Account</button>
+      <p id="addGuardError" class="error-text" style="display:none;"></p>
+    </form>
+  </div>
+
+  <h3>Existing Guards</h3>
+  <div class="card table-card" style="padding:0;">
+    <table>
+      <thead><tr><th>Name</th><th>ID Number</th><th>Created</th></tr></thead>
+      <tbody id="guardRows"><tr><td colspan="3" class="muted">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="/js/common.js"></script>
+<script src="/js/admin-guards.js"></script>
+</body>
+</html>

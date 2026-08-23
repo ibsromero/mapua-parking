@@ -12,7 +12,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
       method: 'POST',
       body: JSON.stringify({ id_number, password })
     });
-    window.location.href = user.role === 'admin' ? '/admin/dashboard.html' : '/dashboard.html';
+    window.location.href = homeFor(user.role);
   } catch (err) {
     errEl.textContent = err.message || 'Login failed.';
     errEl.style.display = 'block';

@@ -45,6 +45,10 @@ async function loadSlots(lotId) {
   }
 }
 
+function arrivalLabel(status) {
+  return { early: 'Early', on_time: 'On time', late: 'Late' }[status] || '';
+}
+
 function showDetail(slot) {
   document.getElementById('detailTitle').textContent = `Slot ${slot.slot_number} Details`;
   const body = document.getElementById('detailBody');
@@ -55,7 +59,9 @@ function showDetail(slot) {
       <p>License Plate: <strong>${esc(slot.plate_no || '-')}</strong><br/>
       Make/Model: ${esc(slot.make || '')} ${esc(slot.model || '')}<br/>
       Color: ${esc(slot.color || '-')}</p>
-      <p>Time Window: ${esc((slot.start_time||'').slice(0,5))} - ${esc((slot.end_time||'').slice(0,5))}, ${esc(slot.reservation_date ? slot.reservation_date.slice(0,10) : '')}</p>`;
+      <p>Ticket: <code>${esc(slot.ticket_number || '')}</code><br/>
+      Time Window: ${esc((slot.start_time||'').slice(0,5))} - ${esc((slot.end_time||'').slice(0,5))}, ${esc(slot.reservation_date ? slot.reservation_date.slice(0,10) : '')}
+      ${slot.arrival_status ? `<br/>Arrival: <strong>${esc(arrivalLabel(slot.arrival_status))}</strong>` : ''}</p>`;
   }
 
   // Gate actions only make sense for reserved (about to arrive) or occupied
@@ -92,7 +98,12 @@ async function logGate(slotId, action) {
   const verb = action === 'entry' ? 'log this vehicle as arrived (entry)' : 'log this vehicle as departed (exit)';
   if (!confirm(`Are you sure you want to ${verb} for this slot?`)) return;
   try {
-    await api(`/api/admin/slots/${slotId}/${action}`, { method: 'POST' });
+    const result = await api(`/api/admin/slots/${slotId}/${action}`, { method: 'POST' });
+    if (action === 'entry') {
+      alert(`Entry logged (${result.ticket_number}). Arrival: ${arrivalLabel(result.arrival_status)}.`);
+    } else {
+      alert(`Exit logged (${result.ticket_number}). ${result.departure_status === 'early' ? 'Vehicle left early.' : 'Departed on schedule.'}`);
+    }
     loadSlots(currentLotId);
   } catch (e) {
     alert(e.message);

@@ -1,5 +1,8 @@
 function badgeClass(status) {
-  return { ongoing: 'badge-ongoing', completed: 'badge-completed', cancelled: 'badge-cancelled' }[status] || 'badge-completed';
+  return { ongoing: 'badge-ongoing', completed: 'badge-completed', cancelled: 'badge-cancelled', forfeited: 'badge-cancelled' }[status] || 'badge-completed';
+}
+function arrivalLabel(status) {
+  return { early: 'Arrived early', on_time: 'Arrived on time', late: 'Arrived late' }[status] || '';
 }
 (async function () {
   const user = await requireAuth('user');
@@ -17,7 +20,8 @@ function badgeClass(status) {
           <span class="muted" style="font-size:13px;">${esc(r.reservation_date?.slice(0,10))}</span>
           <span class="badge ${badgeClass(r.status)}">${esc(r.status)}</span>
         </div>
-        <div style="font-weight:700;margin:6px 0 12px;">${esc(r.start_time?.slice(0,5))} - ${esc(r.end_time?.slice(0,5))}</div>
+        <div style="font-weight:700;margin:6px 0 4px;">${esc(r.start_time?.slice(0,5))} - ${esc(r.end_time?.slice(0,5))}</div>
+        <div class="muted" style="font-size:12px;margin-bottom:12px;"><code>${esc(r.ticket_number)}</code>${r.arrival_status ? ` &middot; ${esc(arrivalLabel(r.arrival_status))}` : ''}</div>
         <div style="background:#f9fafb;border-radius:8px;padding:12px;display:flex;justify-content:space-between;">
           <div><label>Level</label><div>${esc(r.lot_name)}</div></div>
           <div><label>Slot Number</label><div style="color:var(--maroon);font-weight:700;">${esc(r.slot_number)}</div></div>

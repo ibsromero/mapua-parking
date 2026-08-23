@@ -29,6 +29,15 @@ function esc(str) {
     .replace(/'/g, '&#39;');
 }
 
+// Where a logged-in user belongs, based on role -- used both for the
+// post-login redirect and for bouncing someone off a page meant for a
+// different role.
+function homeFor(role) {
+  if (role === 'admin') return '/admin/dashboard.html';
+  if (role === 'guard') return '/guard/checkin.html';
+  return '/dashboard.html';
+}
+
 async function requireAuth(role) {
   try {
     const { user } = await api('/api/auth/me');
@@ -37,7 +46,7 @@ async function requireAuth(role) {
       return null;
     }
     if (role && user.role !== role) {
-      window.location.href = user.role === 'admin' ? '/admin/dashboard.html' : '/dashboard.html';
+      window.location.href = homeFor(user.role);
       return null;
     }
     return user;

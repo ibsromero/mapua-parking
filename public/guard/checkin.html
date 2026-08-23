@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Guard Portal - Mapúa Parking</title>
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+<div class="navbar">
+  <a class="brand brand-with-logo" href="/guard/checkin.html"><img src="/images/mapua-logo.png" alt="Mapúa University" class="brand-logo"><span class="brand-tagline">Parking</span> <span class="admin-tag">Guard</span></a>
+  <div><a href="#" data-logout class="btn">Logout</a></div>
+</div>
+
+<div class="container">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+    <div>
+      <h1>Check-In / Check-Out</h1>
+      <p class="muted">Today's reservations. Verify a plate or slot, then log entry or exit.</p>
+    </div>
+    <input id="searchBox" placeholder="Search plate, slot, or ticket #" style="max-width:280px;" />
+  </div>
+
+  <div class="card table-card" style="margin-top:20px;padding:0;">
+    <table>
+      <thead>
+        <tr>
+          <th>Ticket #</th>
+          <th>Time</th>
+          <th>Slot</th>
+          <th>Student</th>
+          <th>Vehicle</th>
+          <th>Status</th>
+          <th>Arrival</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="rows"><tr><td colspan="8" class="muted">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<script src="/js/common.js"></script>
+<script src="/js/guard-checkin.js"></script>
+</body>
+</html>

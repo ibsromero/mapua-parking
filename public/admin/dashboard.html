@@ -14,6 +14,7 @@
     <a href="/admin/applications.html">App Reviews</a>
     <a href="/admin/facilities.html">Facilities</a>
     <a href="/admin/support.html">Support</a>
+    <a href="/admin/guards.html">Guards</a>
   </nav>
   <div><a href="#" data-logout class="btn">Logout</a></div>
 </div>
@@ -22,20 +23,20 @@
   <h1>Dashboard Overview</h1>
   <p class="muted">Mapúa University - Main Campus Parking Status</p>
 
-  <div class="grid-3" style="margin:24px 0;">
-    <div class="card stat-card">
-      <h3>Total Occupancy</h3>
-      <div class="value" id="occPct">-</div>
-      <p class="muted" id="occDetail" style="margin:4px 0 0;font-size:13px;"></p>
+  <div class="stat-bar" style="margin:20px 0;">
+    <div class="stat-bar-item">
+      <span class="stat-bar-label">Total Occupancy</span>
+      <span class="stat-bar-value" id="occPct">-</span>
+      <span class="stat-bar-detail" id="occDetail"></span>
     </div>
-    <div class="card stat-card">
-      <h3>Active Reservations</h3>
-      <div class="value" id="activeCount">-</div>
+    <div class="stat-bar-item">
+      <span class="stat-bar-label">Active Reservations</span>
+      <span class="stat-bar-value" id="activeCount">-</span>
     </div>
-    <div class="card stat-card">
-      <h3>Pending Applications</h3>
-      <div class="value" id="pendingCount">-</div>
-      <a href="/admin/applications.html" style="font-size:13px;">Review All →</a>
+    <div class="stat-bar-item">
+      <span class="stat-bar-label">Pending Applications</span>
+      <span class="stat-bar-value" id="pendingCount">-</span>
+      <a href="/admin/applications.html" style="font-size:12px;">Review all →</a>
     </div>
   </div>
 

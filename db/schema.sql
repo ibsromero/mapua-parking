@@ -36,15 +36,35 @@ CREATE TABLE IF NOT EXISTS sticker_applications (
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   vehicle_id INTEGER REFERENCES vehicles(id) ON DELETE SET NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'pending', -- pending | approved | rejected
+  -- Documents are stored as bytes in the row (not on local disk) because
+  -- Render's filesystem is ephemeral -- anything written to disk at runtime
+  -- is wiped on every redeploy or sleep/wake cycle. The *_file column holds
+  -- the original filename for display; *_data/*_mimetype hold the actual
+  -- content so it survives independently of the running server instance.
   or_cr_file VARCHAR(255),
+  or_cr_data BYTEA,
+  or_cr_mimetype VARCHAR(100),
   drivers_license_file VARCHAR(255),
+  drivers_license_data BYTEA,
+  drivers_license_mimetype VARCHAR(100),
   university_id_file VARCHAR(255),
+  university_id_data BYTEA,
+  university_id_mimetype VARCHAR(100),
   rules_acknowledged BOOLEAN NOT NULL DEFAULT FALSE,
   rejection_reason TEXT,
   submitted_at TIMESTAMP NOT NULL DEFAULT NOW(),
   reviewed_at TIMESTAMP,
   reviewed_by INTEGER REFERENCES users(id)
 );
+
+-- Idempotent migration for databases created before document bytes were
+-- stored in the row.
+ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS or_cr_data BYTEA;
+ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS or_cr_mimetype VARCHAR(100);
+ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS drivers_license_data BYTEA;
+ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS drivers_license_mimetype VARCHAR(100);
+ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS university_id_data BYTEA;
+ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS university_id_mimetype VARCHAR(100);
 
 -- Idempotent migration for databases created before rejection_reason existed.
 ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS rejection_reason TEXT;

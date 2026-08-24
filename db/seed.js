@@ -63,10 +63,19 @@ async function seed() {
       [studentPass]
     );
 
+    const guardPass = await bcrypt.hash('guard123', 10);
+    await client.query(
+      `INSERT INTO users (id_number, full_name, applicant_type, password_hash, role)
+       VALUES ('GUARD-0001', 'Demo Guard', 'non_teaching', $1, 'guard')
+       ON CONFLICT (id_number) DO NOTHING`,
+      [guardPass]
+    );
+
     await client.query('COMMIT');
     console.log('✅ Seed complete.');
     console.log('   Admin login:   ADMIN-0001 / admin123');
     console.log('   Student login: 2021105432 / student123');
+    console.log('   Guard login:   GUARD-0001 / guard123');
   } catch (err) {
     await client.query('ROLLBACK');
     console.error('❌ Seed failed:', err.message);

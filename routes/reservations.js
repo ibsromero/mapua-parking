@@ -1,15 +1,25 @@
 const express = require('express');
 const pool = require('../db/pool');
 const { requireLogin } = require('../middleware/auth');
-const { sweepExpiredReservations, arrivalStatus, ticketNumber, GRACE_PERIOD_MINUTES } = require('../db/reservationHelpers');
+const {
+  sweepExpiredReservations,
+  arrivalStatus,
+  ticketNumber,
+  phtTodayStr,
+  phtTimeStr,
+  GRACE_PERIOD_MINUTES
+} = require('../db/reservationHelpers');
 
 const router = express.Router();
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
 
+// "Today" for this app always means today in the Philippines, not wherever
+// the server's own clock happens to be set (Render runs in UTC). See
+// db/reservationHelpers.js for why this matters.
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return phtTodayStr();
 }
 
 // GET /api/lots  -> list lots with TODAY's occupancy summary (a slot counts
@@ -19,9 +29,8 @@ function todayStr() {
 router.get('/lots', requireLogin, async (req, res) => {
   try {
     await sweepExpiredReservations(pool);
-    const now = new Date();
-    const today = now.toISOString().slice(0, 10);
-    const nowTime = now.toTimeString().slice(0, 8);
+    const today = phtTodayStr();
+    const nowTime = phtTimeStr();
     const { rows } = await pool.query(
       `SELECT l.id, l.name,
         COUNT(s.id) AS total,
@@ -92,7 +101,7 @@ router.post('/', requireLogin, async (req, res) => {
   ) {
     return res.status(400).json({ error: 'Missing or invalid reservation fields.' });
   }
-  if (new Date(`${reservation_date}T${start_time}`) < new Date(new Date().toDateString())) {
+  if (new Date(`${reservation_date}T${start_time}${'+08:00'}`) < new Date(`${phtTodayStr()}T00:00:00+08:00`)) {
     return res.status(400).json({ error: 'Reservation date cannot be in the past.' });
   }
   if (start_time >= end_time) {

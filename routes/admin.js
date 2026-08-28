@@ -7,22 +7,28 @@ const {
   arrivalStatus,
   departureStatus,
   ticketNumber,
+  phtTodayStr,
+  phtTimeStr,
   GRACE_PERIOD_MINUTES
 } = require('../db/reservationHelpers');
 
 const router = express.Router();
 
+// "Today" for this app always means today in the Philippines, not wherever
+// the server's own clock happens to be set (Render runs in UTC). See
+// db/reservationHelpers.js for why this matters -- this was the direct
+// cause of reservations not showing up on the guard/Facilities view for
+// hours after they were made.
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return phtTodayStr();
 }
 
 // GET /api/admin/overview -> dashboard stats
 router.get('/overview', requireAdmin, async (req, res) => {
   try {
     await sweepExpiredReservations(pool);
-    const now = new Date();
-    const today = now.toISOString().slice(0, 10);
-    const nowTime = now.toTimeString().slice(0, 8);
+    const today = phtTodayStr();
+    const nowTime = phtTimeStr();
 
     const [occupancy, active, pending, recent] = await Promise.all([
       pool.query(

@@ -126,11 +126,22 @@ document.getElementById('bookForm').addEventListener('submit', async (e) => {
   }
 });
 
+// The browser's own local date, not toISOString() (which is always UTC and
+// can show yesterday's date to anyone using this in the evening/night --
+// the exact class of bug that made reservations invisible on the admin
+// side for hours after being made).
+function localDateStr(d = new Date()) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 (async function () {
   const user = await requireAuth('user');
   if (!user) return;
-  document.getElementById('reservation_date').min = new Date().toISOString().slice(0, 10);
-  document.getElementById('reservation_date').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('reservation_date').min = localDateStr();
+  document.getElementById('reservation_date').value = localDateStr();
   await loadLots();
   await loadVehicles();
 })();

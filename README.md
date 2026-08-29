@@ -46,6 +46,164 @@ mapua-parking/
 └── package.json
 ```
 
+## Database design
+
+The database is built as a relational PostgreSQL schema where each real-world entity has its own table and linked records use foreign keys.
+
+### Core entities
+
+- `users` — account data for students, faculty, staff, admins, and guards
+- `vehicles` — a user can register multiple vehicles
+- `sticker_applications` — request to get a parking sticker, including uploaded documents and review status
+- `parking_lots` — parking areas such as Basement 1 or Basement 2
+- `parking_slots` — individual parking spaces inside a lot
+- `reservations` — actual parking bookings for a given date and time
+- `entry_exit_logs` — gate movement history for vehicle entry and exit
+- `support_tickets` — user-reported issues or service requests
+- `session` — used by `connect-pg-simple` to store Express sessions in PostgreSQL
+
+### Mermaid ER diagram
+
+```mermaid
+erDiagram
+    USERS ||--o{ VEHICLES : owns
+    USERS ||--o{ STICKER_APPLICATIONS : submits
+    USERS ||--o{ RESERVATIONS : books
+    USERS ||--o{ SUPPORT_TICKETS : creates
+
+    PARKING_LOTS ||--o{ PARKING_SLOTS : contains
+    PARKING_SLOTS ||--o{ RESERVATIONS : assigned_to
+    RESERVATIONS ||--o{ ENTRY_EXIT_LOGS : records
+
+    USERS {
+        int id PK
+        string id_number
+        string full_name
+        string email
+        string password_hash
+        string role
+        string applicant_type
+        timestamp created_at
+    }
+
+    VEHICLES {
+        int id PK
+        int user_id FK
+        string plate_no
+        string make
+        string model
+        string color
+        timestamp created_at
+    }
+
+    STICKER_APPLICATIONS {
+        int id PK
+        int user_id FK
+        int vehicle_id FK
+        string status
+        boolean rules_acknowledged
+        timestamp submitted_at
+        timestamp reviewed_at
+        int reviewed_by FK
+        text rejection_reason
+    }
+
+    PARKING_LOTS {
+        int id PK
+        string name
+    }
+
+    PARKING_SLOTS {
+        int id PK
+        int lot_id FK
+        string row_label
+        string slot_number
+        string status
+    }
+
+    RESERVATIONS {
+        int id PK
+        int user_id FK
+        int slot_id FK
+        int vehicle_id FK
+        date reservation_date
+        time start_time
+        time end_time
+        string status
+        timestamp checked_in_at
+        timestamp created_at
+    }
+
+    ENTRY_EXIT_LOGS {
+        int id PK
+        int reservation_id FK
+        string plate_no
+        string action
+        timestamp logged_at
+    }
+
+    SUPPORT_TICKETS {
+        int id PK
+        int user_id FK
+        string category
+        text description
+        string status
+        timestamp created_at
+        timestamp resolved_at
+    }
+```
+
+This gives a clearer visual of the database flow:
+
+- a user owns vehicles
+- a user submits sticker applications
+- approved applications allow reservations
+- reservations use parking slots in a lot
+- gate actions are logged against each reservation
+- support tickets are tracked per user
+
+### Relationship overview
+
+- One `user` can have many `vehicles`
+- One `user` can submit many `sticker_applications`
+- One `user` can have many `reservations`
+- One `parking_lot` can contain many `parking_slots`
+- One `parking_slot` can be used in many `reservations` across different dates and times
+- One `reservation` can have many `entry_exit_logs`
+- One `user` can create many `support_tickets`
+
+### Why this structure works
+
+This design keeps the system normalized and avoids repeating data in multiple tables. For example:
+
+- the user profile is stored once in `users`
+- vehicle details are stored separately in `vehicles`
+- bookings are stored in `reservations`
+- slot occupancy is derived from reservation history instead of storing conflicting status values directly in the slot record
+
+### Key design decisions
+
+- `users.id` is the primary key used across the schema
+- foreign keys enforce valid relationships between records
+- `parking_slots.status` represents operational availability such as `available` or `maintenance`
+- `reservations` holds the actual booking state for dates and time ranges
+- `entry_exit_logs` keeps a separate historical record of gate actions
+- indexes are added on major lookup fields like `user_id`, `slot_id`, and status columns to keep queries efficient
+
+### Example schema flow
+
+A typical flow looks like this:
+
+1. A user signs up in `users`
+2. The user adds a vehicle in `vehicles`
+3. The user submits a sticker application in `sticker_applications`
+4. An admin approves or rejects the application
+5. Once approved, the user creates a reservation in `reservations`
+6. The system checks slot availability based on existing reservation records
+7. Gate entry and exit events are logged in `entry_exit_logs`
+
+This is the core database model used by the application and is implemented in [db/schema.sql](db/schema.sql).
+
 ## Deploying (Render + Neon)
 
 1. **Database:** create a project on [neon.tech](https://neon.tech) (free

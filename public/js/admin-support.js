@@ -6,6 +6,7 @@ const NEXT_LABEL = { new: 'Start Progress', in_progress: 'Resolve', waiting_for_
 
 async function loadTickets() {
   const rowsEl = document.getElementById('ticketRows');
+  if (!rowsEl) return;
   const { tickets } = await api('/api/support');
   if (!tickets.length) { rowsEl.innerHTML = '<tr><td colspan="6" class="muted">No tickets.</td></tr>'; return; }
   rowsEl.innerHTML = tickets.map(t => `
@@ -31,10 +32,13 @@ async function advance(id, status) {
 // Advance/Resolve buttons are re-rendered on every loadTickets() call, so
 // this listener is delegated on the table body once — data attributes
 // replace the inline onclick that CSP blocks.
-document.getElementById('ticketRows').addEventListener('click', (e) => {
-  const el = e.target.closest('[data-advance-id]');
-  if (el) advance(Number(el.dataset.advanceId), el.dataset.advanceStatus);
-});
+const ticketTable = document.getElementById('ticketRows');
+if (ticketTable) {
+  ticketTable.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-advance-id]');
+    if (el) advance(Number(el.dataset.advanceId), el.dataset.advanceStatus);
+  });
+}
 
 (async function () {
   const user = await requireAuth('admin');

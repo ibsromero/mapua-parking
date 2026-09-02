@@ -20,20 +20,38 @@ const ON_TIME_TOLERANCE_MINUTES = 10;
 // phtNow() below handles the Node side.
 const PH_OFFSET = '+08:00';
 
-// Returns a Date object whose UTC-formatted date/time components equal the
-// current Philippine wall-clock date/time -- a timezone-library-free way to
-// read "today" and "now" correctly for this campus regardless of what
-// timezone the Node process itself is running in.
-function phtNow() {
-  return new Date(Date.now() + 8 * 60 * 60 * 1000);
+// Read the current date/time in Manila directly from the system clock using
+// Intl so we don't accidentally shift a whole day by converting through UTC.
+// Using toISOString() on an offset-adjusted Date is still UTC-based, which can
+// produce the previous calendar day around midnight in the Philippines.
+function phtParts() {
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Manila',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+    hourCycle: 'h23'
+  });
+  const parts = formatter.formatToParts(new Date());
+  const map = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') map[part.type] = part.value;
+  }
+  return map;
 }
 
 function phtTodayStr() {
-  return phtNow().toISOString().slice(0, 10);
+  const { year, month, day } = phtParts();
+  return `${year}-${month}-${day}`;
 }
 
 function phtTimeStr() {
-  return phtNow().toISOString().slice(11, 19);
+  const { hour, minute, second } = phtParts();
+  return `${hour}:${minute}:${second}`;
 }
 
 async function sweepExpiredReservations(pool) {

@@ -147,12 +147,20 @@ router.post('/slots/:slotId/status', requireAdmin, async (req, res) => {
     let cancelledReservation = false;
     if (status === 'maintenance') {
       const activeRes = await client.query(
-        `SELECT id FROM reservations WHERE slot_id = $1 AND status = 'ongoing' AND reservation_date = $2`,
+        `UPDATE reservations SET status = 'cancelled'
+         WHERE slot_id = $1 AND status = 'ongoing'
+         RETURNING id`,
+        [req.params.slotId]
+      );
+      cancelledReservation = activeRes.rowCount > 0;
+    } else if (status === 'available') {
+      const activeRes = await client.query(
+        `SELECT id FROM reservations WHERE slot_id = $1 AND status = 'ongoing' AND reservation_date = $2 AND checked_in_at IS NULL`,
         [req.params.slotId, todayStr()]
       );
       if (activeRes.rows[0]) {
-        await client.query(`UPDATE reservations SET status = 'cancelled' WHERE id = $1`, [activeRes.rows[0].id]);
-        cancelledReservation = true;
+        await client.query('ROLLBACK');
+        return res.status(409).json({ error: 'This slot has an active reservation. Cancel or complete it before marking it available.' });
       }
     }
 

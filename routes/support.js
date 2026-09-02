@@ -3,11 +3,17 @@ const pool = require('../db/pool');
 const { requireLogin, requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
+const CATEGORIES = ['Sticker Issue', 'Booking Error', 'Payment Issue', 'Other'];
+const MAX_DESCRIPTION_LENGTH = 5000;
 
 // POST /api/support  { category, description }
 router.post('/', requireLogin, async (req, res) => {
-  const { category, description } = req.body;
-  if (!category) return res.status(400).json({ error: 'Category is required.' });
+  const category = typeof req.body.category === 'string' ? req.body.category.trim() : '';
+  const description = typeof req.body.description === 'string' ? req.body.description.trim() : '';
+  if (!CATEGORIES.includes(category)) return res.status(400).json({ error: 'Choose a valid support category.' });
+  if (description.length > MAX_DESCRIPTION_LENGTH) {
+    return res.status(400).json({ error: `Description cannot exceed ${MAX_DESCRIPTION_LENGTH} characters.` });
+  }
   try {
     const { rows } = await pool.query(
       `INSERT INTO support_tickets (user_id, category, description) VALUES ($1,$2,$3) RETURNING *`,

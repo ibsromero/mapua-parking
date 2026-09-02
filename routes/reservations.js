@@ -15,6 +15,20 @@ const router = express.Router();
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME_RE = /^\d{2}:\d{2}(:\d{2})?$/;
 
+function validDate(value) {
+  if (!DATE_RE.test(String(value))) return false;
+  const [year, month, day] = String(value).split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day;
+}
+
+function normalizeTime(value) {
+  if (!TIME_RE.test(String(value))) return null;
+  const [hour, minute, second = 0] = String(value).split(':').map(Number);
+  if (hour > 23 || minute > 59 || second > 59) return null;
+  return `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+}
+
 // "Today" for this app always means today in the Philippines, not wherever
 // the server's own clock happens to be set (Render runs in UTC). See
 // db/reservationHelpers.js for why this matters.
@@ -60,9 +74,9 @@ router.get('/lots', requireLogin, async (req, res) => {
 // only shown "reserved" if a booking actually overlaps the requested window,
 // not forever once anyone has ever booked it for any date.
 router.get('/lots/:lotId/slots', requireLogin, async (req, res) => {
-  const date = DATE_RE.test(String(req.query.date)) ? req.query.date : todayStr();
-  const start = TIME_RE.test(String(req.query.start)) ? req.query.start : '00:00';
-  const end = TIME_RE.test(String(req.query.end)) ? req.query.end : '23:59';
+  const date = validDate(req.query.date) ? req.query.date : todayStr();
+  const start = normalizeTime(req.query.start) || '00:00:00';
+  const end = normalizeTime(req.query.end) || '23:59:00';
   try {
     await sweepExpiredReservations(pool);
     const { rows } = await pool.query(
@@ -95,16 +109,18 @@ router.post('/', requireLogin, async (req, res) => {
   if (
     !Number.isInteger(slot_id) ||
     slot_id <= 0 ||
-    !DATE_RE.test(String(reservation_date)) ||
-    !TIME_RE.test(String(start_time)) ||
-    !TIME_RE.test(String(end_time))
+    !validDate(reservation_date) ||
+    !normalizeTime(start_time) ||
+    !normalizeTime(end_time)
   ) {
     return res.status(400).json({ error: 'Missing or invalid reservation fields.' });
   }
-  if (new Date(`${reservation_date}T${start_time}${'+08:00'}`) < new Date(`${phtTodayStr()}T00:00:00+08:00`)) {
+  const normalizedStart = normalizeTime(start_time);
+  const normalizedEnd = normalizeTime(end_time);
+  if (new Date(`${reservation_date}T${normalizedStart}${'+08:00'}`) < new Date(`${phtTodayStr()}T00:00:00+08:00`)) {
     return res.status(400).json({ error: 'Reservation date cannot be in the past.' });
   }
-  if (start_time >= end_time) {
+  if (normalizedStart >= normalizedEnd) {
     return res.status(400).json({ error: 'End time must be after start time.' });
   }
   // A reservation must be for a specific, owned vehicle with an approved
@@ -150,7 +166,7 @@ router.post('/', requireLogin, async (req, res) => {
       `SELECT id FROM reservations
        WHERE slot_id = $1 AND status = 'ongoing' AND reservation_date = $2
          AND start_time < $4 AND end_time > $3`,
-      [slot_id, reservation_date, start_time, end_time]
+      [slot_id, reservation_date, normalizedStart, normalizedEnd]
     );
     if (conflict.rows[0]) {
       await client.query('ROLLBACK');
@@ -160,7 +176,7 @@ router.post('/', requireLogin, async (req, res) => {
     const resRow = await client.query(
       `INSERT INTO reservations (user_id, slot_id, vehicle_id, reservation_date, start_time, end_time, status)
        VALUES ($1, $2, $3, $4, $5, $6, 'ongoing') RETURNING *`,
-      [req.session.user.id, slot_id, vId, reservation_date, start_time, end_time]
+      [req.session.user.id, slot_id, vId, reservation_date, normalizedStart, normalizedEnd]
     );
 
     await client.query('COMMIT');

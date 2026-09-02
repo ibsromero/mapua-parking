@@ -32,12 +32,39 @@ function mimeFor(file) {
 
 // POST /api/applications  (multipart form: vehicle_id + files + rules_acknowledged)
 router.post('/', requireLogin, uploadFields, async (req, res) => {
-  const { vehicle_id, rules_acknowledged } = req.body;
+  const vehicleId = Number.parseInt(req.body.vehicle_id, 10);
   const files = req.files || {};
   const orCr = files.or_cr_file?.[0];
   const license = files.drivers_license_file?.[0];
   const uniId = files.university_id_file?.[0];
+  const rulesAck = req.body.rules_acknowledged === 'true' || req.body.rules_acknowledged === true;
+
+  if (!Number.isInteger(vehicleId) || vehicleId <= 0) {
+    return res.status(400).json({ error: 'Select a valid vehicle for this application.' });
+  }
+  if (!orCr || !license || !uniId) {
+    return res.status(400).json({ error: 'Please upload all required documents before submitting.' });
+  }
+  if (!rulesAck) {
+    return res.status(400).json({ error: 'You must acknowledge the parking rules before submitting.' });
+  }
+
   try {
+    const owned = await pool.query('SELECT id FROM vehicles WHERE id = $1 AND user_id = $2', [vehicleId, req.session.user.id]);
+    if (!owned.rows[0]) {
+      return res.status(403).json({ error: 'That vehicle does not belong to you.' });
+    }
+
+    const existing = await pool.query(
+      `SELECT id FROM sticker_applications
+       WHERE user_id = $1 AND vehicle_id = $2 AND status IN ('pending', 'approved')
+       LIMIT 1`,
+      [req.session.user.id, vehicleId]
+    );
+    if (existing.rows[0]) {
+      return res.status(409).json({ error: 'This vehicle already has an active sticker application.' });
+    }
+
     const { rows } = await pool.query(
       `INSERT INTO sticker_applications
         (user_id, vehicle_id,
@@ -50,15 +77,18 @@ router.post('/', requireLogin, uploadFields, async (req, res) => {
                  rules_acknowledged, rejection_reason, submitted_at, reviewed_at, reviewed_by`,
       [
         req.session.user.id,
-        vehicle_id || null,
+        vehicleId,
         orCr?.originalname || null, orCr?.buffer || null, orCr ? mimeFor(orCr) : null,
         license?.originalname || null, license?.buffer || null, license ? mimeFor(license) : null,
         uniId?.originalname || null, uniId?.buffer || null, uniId ? mimeFor(uniId) : null,
-        rules_acknowledged === 'true' || rules_acknowledged === true
+        true
       ]
     );
     res.status(201).json({ application: rows[0] });
   } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'This vehicle already has an active sticker application.' });
+    }
     console.error(err);
     res.status(500).json({ error: 'Failed to submit application.' });
   }
@@ -133,12 +163,12 @@ router.post('/:id/decision', requireAdmin, async (req, res) => {
     const { rows } = await pool.query(
       `UPDATE sticker_applications
        SET status = $1, reviewed_at = NOW(), reviewed_by = $2, rejection_reason = $3
-       WHERE id = $4
+       WHERE id = $4 AND status = 'pending'
        RETURNING id, user_id, vehicle_id, status, or_cr_file, drivers_license_file, university_id_file,
                  rules_acknowledged, rejection_reason, submitted_at, reviewed_at, reviewed_by`,
       [decision, req.session.user.id, rejectionReason, req.params.id]
     );
-    if (!rows[0]) return res.status(404).json({ error: 'Application not found.' });
+    if (!rows[0]) return res.status(409).json({ error: 'Only pending applications can be reviewed.' });
     res.json({ application: rows[0] });
   } catch (err) {
     console.error(err);

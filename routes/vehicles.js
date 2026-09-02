@@ -13,6 +13,11 @@ function clean(val) {
   const trimmed = val.trim().slice(0, MAX);
   return trimmed.length ? trimmed : null;
 }
+function normalizePlate(value) {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().replace(/\s+/g, ' ').toUpperCase();
+  return normalized.length ? normalized : null;
+}
 const PLATE_RE = /^[A-Za-z0-9 -]{1,15}$/;
 const YEAR_RE = /^(19|20)\d{2}$/;
 const RELATIONS = ['self', 'parent', 'sibling', 'spouse', 'relative', 'other'];
@@ -39,7 +44,7 @@ router.get('/', requireLogin, async (req, res) => {
 
 // POST /api/vehicles
 router.post('/', requireLogin, async (req, res) => {
-  const plate_no = clean(req.body.plate_no);
+  const plate_no = normalizePlate(req.body.plate_no);
   const year = clean(req.body.year);
   const relation_to_applicant = clean(req.body.relation_to_applicant);
 
@@ -54,6 +59,14 @@ router.post('/', requireLogin, async (req, res) => {
   }
 
   try {
+    const existing = await pool.query(
+      `SELECT id FROM vehicles WHERE user_id = $1 AND UPPER(TRIM(plate_no)) = $2`,
+      [req.session.user.id, plate_no]
+    );
+    if (existing.rows[0]) {
+      return res.status(409).json({ error: 'This plate number is already saved to your account.' });
+    }
+
     const { rows } = await pool.query(
       `INSERT INTO vehicles
         (user_id, plate_no, make, model, year, body_type, color, trim, owner_name, owner_address, relation_to_applicant)
@@ -74,6 +87,9 @@ router.post('/', requireLogin, async (req, res) => {
     );
     res.status(201).json({ vehicle: rows[0] });
   } catch (err) {
+    if (err.code === '23505') {
+      return res.status(409).json({ error: 'This plate number is already saved to your account.' });
+    }
     console.error(err);
     res.status(500).json({ error: 'Failed to save vehicle.' });
   }

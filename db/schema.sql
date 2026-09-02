@@ -130,6 +130,37 @@ CREATE INDEX IF NOT EXISTS idx_reservations_slot ON reservations(slot_id);
 CREATE INDEX IF NOT EXISTS idx_applications_status ON sticker_applications(status);
 CREATE INDEX IF NOT EXISTS idx_slots_lot ON parking_slots(lot_id);
 
+-- Consolidate legacy duplicate vehicle rows before enforcing normalized plate
+-- uniqueness. References and history are retained on the oldest row.
+UPDATE sticker_applications a
+SET vehicle_id = keep.id
+FROM vehicles duplicate
+JOIN LATERAL (
+  SELECT MIN(id) AS id FROM vehicles
+  WHERE user_id = duplicate.user_id AND UPPER(BTRIM(plate_no)) = UPPER(BTRIM(duplicate.plate_no))
+) keep ON TRUE
+WHERE a.vehicle_id = duplicate.id AND duplicate.id <> keep.id;
+UPDATE reservations r
+SET vehicle_id = keep.id
+FROM vehicles duplicate
+JOIN LATERAL (
+  SELECT MIN(id) AS id FROM vehicles
+  WHERE user_id = duplicate.user_id AND UPPER(BTRIM(plate_no)) = UPPER(BTRIM(duplicate.plate_no))
+) keep ON TRUE
+WHERE r.vehicle_id = duplicate.id AND duplicate.id <> keep.id;
+DELETE FROM vehicles duplicate
+WHERE EXISTS (
+  SELECT 1 FROM vehicles keep
+  WHERE keep.user_id = duplicate.user_id
+    AND UPPER(BTRIM(keep.plate_no)) = UPPER(BTRIM(duplicate.plate_no))
+    AND keep.id < duplicate.id
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_one_active_application_per_vehicle
+  ON sticker_applications(user_id, vehicle_id) WHERE status IN ('pending', 'approved');
+CREATE UNIQUE INDEX IF NOT EXISTS idx_one_normalized_plate_per_user
+  ON vehicles(user_id, UPPER(BTRIM(plate_no)));
+
 -- Session store table (used by connect-pg-simple). Created here at migration
 -- time so the app never depends on lazy first-request table creation.
 CREATE TABLE IF NOT EXISTS "session" (

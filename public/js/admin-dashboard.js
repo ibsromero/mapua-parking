@@ -9,6 +9,7 @@
     document.getElementById('pendingCount').textContent = data.pending_applications;
 
     const box = document.getElementById('recentActivity');
+    if (!box) return;
     if (!data.recent_activity.length) {
       box.innerHTML = '<p class="muted">No recent entry/exit activity logged yet.</p>';
     } else {
@@ -19,6 +20,7 @@
         </div>`).join('');
     }
   } catch (e) {
-    document.getElementById('recentActivity').innerHTML = `<p class="error-text">${esc(e.message)}</p>`;
+    const box = document.getElementById('recentActivity');
+    if (box) box.innerHTML = `<p class="error-text">${esc(e.message)}</p>`;
   }
 })();

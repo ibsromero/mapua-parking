@@ -1,5 +1,20 @@
 let allReservations = [];
 
+document.getElementById('verifyForm').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const result = document.getElementById('verifyResult');
+  const token = document.getElementById('permitToken').value.trim();
+  result.innerHTML = '<p class="muted">Checking permit...</p>';
+  try {
+    const { permit } = await api(`/api/applications/verify/${encodeURIComponent(token)}`);
+    result.innerHTML = `<div class="alert alert-info"><strong>Valid digital sticker</strong><br/>
+      ${esc(permit.permit_number)} · ${esc(permit.owner_name)} · ${esc(permit.plate_no || 'No plate')}<br/>
+      <span class="muted">${esc([permit.make, permit.model, permit.color].filter(Boolean).join(' '))}</span></div>`;
+  } catch (err) {
+    result.innerHTML = `<div class="alert alert-warning"><strong>Invalid digital sticker</strong><br/>${esc(err.message)}</div>`;
+  }
+});
+
 function badgeClass(status) {
   return { ongoing: 'badge-ongoing', completed: 'badge-completed', cancelled: 'badge-cancelled', forfeited: 'badge-cancelled' }[status] || 'badge-ongoing';
 }

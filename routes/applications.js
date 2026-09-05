@@ -1,6 +1,8 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const crypto = require('crypto');
+const QRCode = require('qrcode');
 const pool = require('../db/pool');
 const { requireLogin, requireAdmin } = require('../middleware/auth');
 
@@ -98,9 +100,10 @@ router.post('/', requireLogin, uploadFields, async (req, res) => {
 router.get('/mine', requireLogin, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT a.id, a.user_id, a.vehicle_id, a.status, a.or_cr_file, a.drivers_license_file,
+            `SELECT a.id, a.user_id, a.vehicle_id, a.status, a.or_cr_file, a.drivers_license_file,
               a.university_id_file, a.rules_acknowledged, a.rejection_reason, a.submitted_at,
-              a.reviewed_at, a.reviewed_by, v.plate_no, v.make, v.model
+              a.reviewed_at, a.reviewed_by, a.permit_number, a.permit_token, a.permit_issued_at,
+              v.plate_no, v.make, v.model
        FROM sticker_applications a
        LEFT JOIN vehicles v ON v.id = a.vehicle_id
        WHERE a.user_id = $1 ORDER BY a.submitted_at DESC`,
@@ -160,19 +163,70 @@ router.post('/:id/decision', requireAdmin, async (req, res) => {
     }
   }
   try {
+    const permitNumber = decision === 'approved' ? `MP-${new Date().getFullYear()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}` : null;
+    const permitToken = decision === 'approved' ? crypto.randomBytes(24).toString('hex') : null;
     const { rows } = await pool.query(
       `UPDATE sticker_applications
-       SET status = $1, reviewed_at = NOW(), reviewed_by = $2, rejection_reason = $3
+       SET status = $1, reviewed_at = NOW(), reviewed_by = $2, rejection_reason = $3,
+           permit_number = $5, permit_token = $6, permit_issued_at = CASE WHEN $1 = 'approved' THEN NOW() ELSE NULL END
        WHERE id = $4 AND status = 'pending'
        RETURNING id, user_id, vehicle_id, status, or_cr_file, drivers_license_file, university_id_file,
-                 rules_acknowledged, rejection_reason, submitted_at, reviewed_at, reviewed_by`,
-      [decision, req.session.user.id, rejectionReason, req.params.id]
+                 rules_acknowledged, rejection_reason, submitted_at, reviewed_at, reviewed_by,
+                 permit_number, permit_token, permit_issued_at`,
+      [decision, req.session.user.id, rejectionReason, req.params.id, permitNumber, permitToken]
     );
     if (!rows[0]) return res.status(409).json({ error: 'Only pending applications can be reviewed.' });
     res.json({ application: rows[0] });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to update application.' });
+  }
+});
+
+// GET /api/applications/:id/qr - render the owner's issued permit as a QR image.
+router.get('/:id/qr', requireLogin, async (req, res) => {
+  try {
+    const { rows } = await pool.query(
+      `SELECT user_id, permit_token FROM sticker_applications
+       WHERE id = $1 AND status = 'approved'`,
+      [req.params.id]
+    );
+    const application = rows[0];
+    if (!application) return res.status(404).json({ error: 'Approved permit not found.' });
+    if (application.user_id !== req.session.user.id && req.session.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Not authorized to view this permit.' });
+    }
+    const image = await QRCode.toDataURL(application.permit_token, { margin: 1, width: 240 });
+    res.type('png').send(Buffer.from(image.split(',')[1], 'base64'));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to generate permit QR code.' });
+  }
+});
+
+// GET /api/applications/verify/:token - guard verification for a scanned permit.
+router.get('/verify/:token', requireLogin, async (req, res) => {
+  if (!['guard', 'admin'].includes(req.session.user.role)) {
+    return res.status(403).json({ error: 'Only guards can verify permits.' });
+  }
+  try {
+    const { rows } = await pool.query(
+      `SELECT a.permit_number, a.permit_issued_at, a.status, v.plate_no, v.make, v.model, v.color,
+              u.full_name AS owner_name, u.id_number
+       FROM sticker_applications a
+       JOIN users u ON u.id = a.user_id
+       LEFT JOIN vehicles v ON v.id = a.vehicle_id
+       WHERE a.permit_token = $1`,
+      [req.params.token]
+    );
+    const permit = rows[0];
+    if (!permit || permit.status !== 'approved') {
+      return res.status(404).json({ valid: false, error: 'Permit is invalid or no longer active.' });
+    }
+    res.json({ valid: true, permit });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to verify permit.' });
   }
 });
 

@@ -52,6 +52,9 @@ CREATE TABLE IF NOT EXISTS sticker_applications (
   university_id_mimetype VARCHAR(100),
   rules_acknowledged BOOLEAN NOT NULL DEFAULT FALSE,
   rejection_reason TEXT,
+  permit_number VARCHAR(30) UNIQUE,
+  permit_token VARCHAR(64) UNIQUE,
+  permit_issued_at TIMESTAMP,
   submitted_at TIMESTAMP NOT NULL DEFAULT NOW(),
   reviewed_at TIMESTAMP,
   reviewed_by INTEGER REFERENCES users(id)
@@ -68,6 +71,11 @@ ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS university_id_mimetype
 
 -- Idempotent migration for databases created before rejection_reason existed.
 ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
+ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS permit_number VARCHAR(30);
+ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS permit_token VARCHAR(64);
+ALTER TABLE sticker_applications ADD COLUMN IF NOT EXISTS permit_issued_at TIMESTAMP;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sticker_permit_number ON sticker_applications(permit_number) WHERE permit_number IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sticker_permit_token ON sticker_applications(permit_token) WHERE permit_token IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS parking_lots (
   id SERIAL PRIMARY KEY,

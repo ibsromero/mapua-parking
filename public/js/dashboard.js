@@ -17,6 +17,27 @@
       ? applications.filter(a => a.status === 'rejected').sort((a, b) => new Date(b.reviewed_at) - new Date(a.reviewed_at))[0]
       : null;
 
+    const approved = applications.find(a => a.status === 'approved' && a.permit_token);
+    if (approved) {
+      document.getElementById('digitalPermit').innerHTML = `
+        <div class="card" style="margin:20px 0;border:2px solid var(--maroon);">
+          <div style="display:flex;justify-content:space-between;align-items:start;gap:20px;flex-wrap:wrap;">
+            <div>
+              <span class="badge badge-completed">● Active digital sticker</span>
+              <h2 style="margin:12px 0 4px;">Mapúa Parking Permit</h2>
+              <p class="muted" style="margin:0 0 18px;">Present this permit and QR code at the parking gate.</p>
+              <div class="grid-2">
+                <div><label>Permit number</label><div><code>${esc(approved.permit_number)}</code></div></div>
+                <div><label>Vehicle</label><div>${esc(approved.plate_no)}${approved.make ? ` · ${esc(approved.make)}` : ''}</div></div>
+              </div>
+              <button class="btn btn-primary" style="margin-top:18px;" id="printPermit">Print permit</button>
+            </div>
+            <img src="/api/applications/${approved.id}/qr" alt="QR code for parking permit ${esc(approved.permit_number)}" width="180" height="180" style="border:1px solid #ddd;padding:8px;background:#fff;" />
+          </div>
+        </div>`;
+      document.getElementById('printPermit').addEventListener('click', () => window.print());
+    }
+
     if (hasApproved) {
       // Nothing to nag about -- no banner needed.
     } else if (hasPending) {

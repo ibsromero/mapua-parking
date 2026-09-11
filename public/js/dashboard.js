@@ -3,6 +3,71 @@
   if (!user) return;
   document.getElementById('welcome').textContent = `Welcome back, ${user.full_name.split(' ')[0]}`;
 
+  function printSheet(type) {
+    document.body.classList.add(`printing-${type}`);
+    const cleanup = () => {
+      document.body.classList.remove(`printing-${type}`);
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    window.print();
+  }
+
+  function printPermit(approved) {
+    document.getElementById('printPermitSheet').innerHTML = `
+      <div class="print-header">
+        <div>
+          <div class="print-kicker">MAPUA UNIVERSITY</div>
+          <h1>Vehicle Parking Sticker</h1>
+        </div>
+        <span class="print-status">ACTIVE</span>
+      </div>
+      <div class="permit-print-body">
+        <div>
+          <p class="print-eyebrow">Permit number</p>
+          <div class="print-permit-number">${esc(approved.permit_number)}</div>
+          <div class="print-detail-list">
+            <div><span>Plate number</span><strong>${esc(approved.plate_no || 'N/A')}</strong></div>
+            <div><span>Vehicle</span><strong>${esc([approved.make, approved.model].filter(Boolean).join(' ') || 'N/A')}</strong></div>
+            <div><span>Issued</span><strong>${esc(formatPrintDate(approved.permit_issued_at))}</strong></div>
+          </div>
+        </div>
+        <img class="print-qr" src="/api/applications/${approved.id}/qr" alt="QR code for parking permit ${esc(approved.permit_number)}" />
+      </div>
+      <p class="print-footer">Present this sticker and QR code when entering the Mapua University parking facility.</p>`;
+    printSheet('permit');
+  }
+
+  function printTicket(reservation, fullName) {
+    document.getElementById('printTicketSheet').innerHTML = `
+      <div class="print-header">
+        <div>
+          <div class="print-kicker">MAPUA UNIVERSITY PARKING</div>
+          <h1>Parking Ticket</h1>
+        </div>
+        <span class="print-status">VALID</span>
+      </div>
+      <div class="ticket-number">${esc(reservation.ticket_number)}</div>
+      <div class="ticket-print-grid">
+        <div><span>Driver</span><strong>${esc(fullName)}</strong></div>
+        <div><span>Vehicle</span><strong>${esc(reservation.plate_no || 'N/A')}</strong></div>
+        <div><span>Location</span><strong>${esc(reservation.lot_name)}</strong></div>
+        <div><span>Slot</span><strong>${esc(reservation.slot_number)}</strong></div>
+        <div><span>Date</span><strong>${esc(formatPrintDate(reservation.reservation_date))}</strong></div>
+        <div><span>Time</span><strong>${esc(`${reservation.start_time?.slice(0, 5)} - ${reservation.end_time?.slice(0, 5)}`)}</strong></div>
+      </div>
+      <p class="print-footer">Keep this ticket available for parking verification. Arrival is required within the grace period.</p>`;
+    printSheet('ticket');
+  }
+
+  function formatPrintDate(value) {
+    if (!value) return 'N/A';
+    const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+    return Number.isNaN(date.getTime()) ? String(value).slice(0, 10) : date.toLocaleDateString('en-PH', {
+      year: 'numeric', month: 'short', day: 'numeric'
+    });
+  }
+
   // Sticker status banner -- reflects the applicant's real application
   // state instead of always nagging regardless of approval.
   try {
@@ -20,22 +85,22 @@
     const approved = applications.find(a => a.status === 'approved' && a.permit_token);
     if (approved) {
       document.getElementById('digitalPermit').innerHTML = `
-        <div class="card" style="margin:20px 0;border:2px solid var(--maroon);">
-          <div style="display:flex;justify-content:space-between;align-items:start;gap:20px;flex-wrap:wrap;">
+        <div class="card permit-card">
+          <div class="permit-card-content">
             <div>
               <span class="badge badge-completed">● Active digital sticker</span>
-              <h2 style="margin:12px 0 4px;">Mapúa Parking Permit</h2>
-              <p class="muted" style="margin:0 0 18px;">Present this permit and QR code at the parking gate.</p>
+              <h2 class="permit-title">Mapúa Parking Permit</h2>
+              <p class="muted permit-description">Present this permit and QR code at the parking gate.</p>
               <div class="grid-2">
                 <div><label>Permit number</label><div><code>${esc(approved.permit_number)}</code></div></div>
                 <div><label>Vehicle</label><div>${esc(approved.plate_no)}${approved.make ? ` · ${esc(approved.make)}` : ''}</div></div>
               </div>
-              <button class="btn btn-primary" style="margin-top:18px;" id="printPermit">Print permit</button>
+              <button class="btn btn-primary" style="margin-top:18px;" id="printPermit">Print sticker</button>
             </div>
-            <img src="/api/applications/${approved.id}/qr" alt="QR code for parking permit ${esc(approved.permit_number)}" width="180" height="180" style="border:1px solid #ddd;padding:8px;background:#fff;" />
+            <img class="permit-qr-preview" src="/api/applications/${approved.id}/qr" alt="QR code for parking permit ${esc(approved.permit_number)}" width="180" height="180" />
           </div>
         </div>`;
-      document.getElementById('printPermit').addEventListener('click', () => window.print());
+      document.getElementById('printPermit').addEventListener('click', () => printPermit(approved));
     }
 
     if (hasApproved) {
@@ -101,6 +166,11 @@
           <button class="btn btn-danger" style="flex:1;" id="cancelBtn">Cancel</button>
           <button class="btn btn-primary" style="flex:1;" id="extendBtn">Extend Time (+1 hr)</button>
         </div>`;
+      const printTicketButton = document.createElement('button');
+      printTicketButton.className = 'btn ticket-print-button';
+      printTicketButton.textContent = 'Print ticket';
+      printTicketButton.addEventListener('click', () => printTicket(reservation, user.full_name));
+      document.getElementById('activeReservation').appendChild(printTicketButton);
       document.getElementById('cancelBtn').addEventListener('click', async () => {
         if (!confirm('Cancel this reservation?')) return;
         await api(`/api/reservations/${reservation.id}/cancel`, { method: 'POST' });

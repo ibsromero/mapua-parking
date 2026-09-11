@@ -81,6 +81,38 @@ a { color: var(--maroon); }
   background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 24px;
 }
 
+.permit-card { margin: 20px 0; border: 2px solid var(--maroon); background: linear-gradient(135deg, #fff 0%, #fff7f8 100%); }
+.permit-card-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
+.permit-title { margin: 12px 0 4px; }
+.permit-description { margin: 0 0 18px; }
+.permit-qr-preview { width: 180px; height: 180px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: #fff; }
+.ticket-print-button { width: 100%; margin-top: 12px; }
+
+.print-sheet { display: none; }
+.print-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; border-bottom: 2px solid #1a1a1a; padding-bottom: 16px; }
+.print-kicker, .print-eyebrow, .print-detail-list span, .ticket-print-grid span { color: #5d6470; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.print-header h1 { margin: 4px 0 0; font-size: 26px; }
+.print-status { border: 1px solid #1a1a1a; padding: 5px 8px; font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+.permit-print-body { display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center; padding: 28px 0 22px; }
+.print-eyebrow { margin: 0 0 8px; }
+.print-permit-number, .ticket-number { font-size: 26px; font-weight: 900; letter-spacing: .06em; }
+.print-detail-list { display: grid; gap: 12px; margin-top: 24px; }
+.print-detail-list div, .ticket-print-grid div { display: grid; gap: 3px; }
+.print-detail-list strong, .ticket-print-grid strong { font-size: 15px; }
+.print-qr { width: 150px; height: 150px; border: 1px solid #1a1a1a; padding: 8px; background: #fff; }
+.print-footer { border-top: 1px solid #c9cdd3; padding-top: 12px; color: #5d6470; font-size: 11px; }
+.ticket-number { margin: 24px 0; font-size: 30px; }
+.ticket-print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 28px; padding-bottom: 24px; }
+
+@media print {
+  @page { size: auto; margin: 12mm; }
+  body { background: #fff; }
+  body > * { display: none !important; }
+  body.printing-permit #printPermitSheet,
+  body.printing-ticket #printTicketSheet { display: block !important; }
+  .print-sheet { width: 100%; max-width: 180mm; margin: 0 auto; color: #1a1a1a; }
+}
+
 .badge { padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .badge-ongoing { background: var(--maroon-light); color: var(--maroon); }
 .badge-completed { background: #e7f6ec; color: var(--green); }
@@ -177,5 +209,6 @@ td { padding: 14px 12px; border-top: 1px solid var(--border); font-size: 14px; }
   .login-card { width: 100%; padding: var(--space-6) var(--space-5); }
 
   .btn { padding: 10px 16px; }
+  .permit-qr-preview { width: 140px; height: 140px; }
 }
 

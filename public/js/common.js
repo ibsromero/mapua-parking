@@ -1,10 +1,23 @@
 // Small fetch wrapper. Always sends/receives JSON and credentials (session cookie).
 async function api(path, options = {}) {
-  const res = await fetch(path, {
-    credentials: 'same-origin',
-    headers: options.body instanceof FormData ? {} : { 'Content-Type': 'application/json' },
-    ...options
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), options.timeout || 15000);
+  const { timeout: _timeout, ...fetchOptions } = options;
+  let res;
+  try {
+    res = await fetch(path, {
+      credentials: 'same-origin',
+      headers: fetchOptions.body instanceof FormData ? {} : { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+      ...fetchOptions
+    });
+  } catch (error) {
+    if (error.name === 'AbortError') throw new Error('The request took too long. Check your connection and try again.');
+    if (!navigator.onLine) throw new Error('You appear to be offline. Reconnect and try again.');
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
   let data = null;
   try {
     data = await res.json();
@@ -57,8 +70,28 @@ async function requireAuth(role) {
 }
 
 async function logout() {
-  await api('/api/auth/logout', { method: 'POST' });
-  window.location.href = '/login.html';
+  try {
+    await api('/api/auth/logout', { method: 'POST' });
+  } finally {
+    window.location.href = '/login.html';
+  }
+}
+
+function setupRememberedId() {
+  const idInput = document.getElementById('id_number');
+  const remember = document.getElementById('remember');
+  if (!idInput || !remember) return;
+
+  const rememberedId = localStorage.getItem('mapuaParking.rememberedId');
+  if (rememberedId) {
+    idInput.value = rememberedId;
+    remember.checked = true;
+  }
+
+  return () => {
+    if (remember.checked) localStorage.setItem('mapuaParking.rememberedId', idInput.value.trim());
+    else localStorage.removeItem('mapuaParking.rememberedId');
+  };
 }
 
 // Delegated handler for every "Logout" link across the app. Inline

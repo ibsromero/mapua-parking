@@ -1,0 +1,17 @@
+{
+  "name": "Mapua Parking System",
+  "short_name": "Mapua Parking",
+  "description": "Parking reservations and vehicle sticker management for Mapua University.",
+  "start_url": "/login.html",
+  "display": "standalone",
+  "background_color": "#f5f6f8",
+  "theme_color": "#6e0e1e",
+  "icons": [
+    {
+      "src": "/images/mapua-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

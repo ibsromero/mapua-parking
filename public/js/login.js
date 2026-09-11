@@ -1,4 +1,5 @@
 const loginForm = document.getElementById('loginForm');
+const saveRememberedId = setupRememberedId();
 if (loginForm) {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -10,6 +11,7 @@ if (loginForm) {
     try {
       const id_number = document.getElementById('id_number').value.trim();
       const password = document.getElementById('password').value;
+      if (saveRememberedId) saveRememberedId();
       const { user } = await api('/api/auth/login', {
         method: 'POST',
         body: JSON.stringify({ id_number, password })

@@ -443,23 +443,23 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   position: absolute;
   width: min(52vw, 620px);
   height: min(52vw, 620px);
-  border: 2px solid rgba(253,185,19,.48);
-  border-radius: 50%;
-  top: -31vw;
+  border: 2px solid rgba(253,185,19,.5);
+  transform: rotate(18deg);
+  top: -30vw;
   left: -12vw;
-  box-shadow: 0 0 0 24px rgba(253,185,19,.09), 0 0 0 48px rgba(253,185,19,.055);
+  box-shadow: inset 0 0 0 18px rgba(253,185,19,.08), 0 0 0 18px rgba(253,185,19,.06);
   z-index: -1;
 }
 .center-page::after {
   content: "";
   position: absolute;
-  width: min(64vw, 760px);
-  height: min(64vw, 760px);
+  width: min(68vw, 820px);
+  height: min(68vw, 820px);
   border: 2px solid rgba(253,185,19,.42);
-  border-radius: 50%;
-  right: -27vw;
-  bottom: -45vw;
-  box-shadow: 0 0 0 26px rgba(253,185,19,.085), 0 0 0 52px rgba(253,185,19,.05);
+  transform: rotate(22deg);
+  right: -28vw;
+  bottom: -48vw;
+  box-shadow: inset 0 0 0 16px rgba(253,185,19,.04), 0 0 0 18px rgba(253,185,19,.04);
   z-index: -1;
 }
 body:has(.login-card), body:has(.signup-card) { background: #6e0e1e !important; }

@@ -104,6 +104,9 @@ a { color: var(--maroon); }
 .scanner-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .scanner-toolbar p, #scannerStatus { margin: 0; }
 .qr-video { display: block; width: min(100%, 420px); max-height: 280px; margin: 14px auto 0; border-radius: 8px; background: #111; object-fit: cover; }
+.verify-alert { display: block; }
+.verify-alert strong, .verify-line { display: block; }
+.verify-line { margin-top: 4px; }
 
 .permit-card { margin: 20px 0; border: 2px solid var(--maroon); background: linear-gradient(135deg, #fff 0%, #fff7f8 100%); }
 .permit-card-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }

@@ -62,11 +62,16 @@ document.getElementById('verifyForm').addEventListener('submit', async (event) =
   result.innerHTML = '<p class="muted">Checking permit...</p>';
   try {
     const { permit } = await api(`/api/applications/verify/${encodeURIComponent(token)}`);
-    result.innerHTML = `<div class="alert alert-info"><strong>Valid digital sticker</strong><br/>
-      ${esc(permit.permit_number)} · ${esc(permit.owner_name)} · ${esc(permit.plate_no || 'No plate')}<br/>
-      <span class="muted">${esc([permit.make, permit.model, permit.color].filter(Boolean).join(' '))}</span></div>`;
+    result.innerHTML = `<div class="alert alert-info verify-alert">
+      <strong>Valid digital sticker</strong>
+      <span class="verify-line">${esc(permit.permit_number)} · ${esc(permit.owner_name)} · ${esc(permit.plate_no || 'No plate')}</span>
+      <span class="muted verify-line">${esc([permit.make, permit.model, permit.color].filter(Boolean).join(' '))}</span>
+    </div>`;
   } catch (err) {
-    result.innerHTML = `<div class="alert alert-warning"><strong>Invalid digital sticker</strong><br/>${esc(err.message)}</div>`;
+    result.innerHTML = `<div class="alert alert-warning verify-alert">
+      <strong>Invalid digital sticker</strong>
+      <span class="verify-line">${esc(err.message)}</span>
+    </div>`;
   }
 });
 

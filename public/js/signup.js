@@ -12,7 +12,10 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
         applicant_type: document.getElementById('applicant_type').value,
         full_name: document.getElementById('full_name').value.trim(),
         id_number: document.getElementById('id_number').value.trim(),
-        course_year: document.getElementById('course_year').value.trim(),
+        course_year: [
+          document.getElementById('course').value,
+          document.getElementById('year_level').value
+        ].filter(Boolean).join(' - '),
         contact_no: document.getElementById('contact_no').value.trim(),
         email: document.getElementById('email').value.trim(),
         password: document.getElementById('password').value

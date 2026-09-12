@@ -39,7 +39,59 @@
         <input id="id_number" placeholder="e.g. 2021105432" required maxlength="20" autocomplete="username" />
       </div>
       <div class="grid-2">
-        <div class="field"><label for="course_year">Course & Year (if student)</label><input id="course_year" placeholder="e.g. BSCS - 3rd Year" maxlength="100" /></div>
+        <div class="field course-year-fields">
+          <div>
+            <label for="course">Course (if student)</label>
+            <select id="course">
+              <option value="">Select your course</option>
+              <optgroup label="Architecture and Design">
+                <option>BS Architecture</option>
+                <option>BS Interior Design</option>
+                <option>BA Multimedia Arts and Design</option>
+              </optgroup>
+              <optgroup label="Engineering">
+                <option>BS Chemical Engineering</option>
+                <option>BS Civil Engineering</option>
+                <option>BS Computer Engineering</option>
+                <option>BS Electrical Engineering</option>
+                <option>BS Electronics Engineering</option>
+                <option>BS Environmental and Sanitary Engineering</option>
+                <option>BS Industrial Engineering</option>
+                <option>BS Manufacturing Engineering</option>
+                <option>BS Materials Engineering</option>
+                <option>BS Mechanical Engineering</option>
+                <option>BS Mechatronics Engineering</option>
+              </optgroup>
+              <optgroup label="Computing and Information Technology">
+                <option>BS Computer Science</option>
+                <option>BS Data Science</option>
+                <option>BS Entertainment and Multimedia Computing</option>
+                <option>BS Information Technology</option>
+              </optgroup>
+              <optgroup label="Business and Management">
+                <option>BS Accountancy</option>
+                <option>BS Business Administration</option>
+                <option>BS Management Engineering</option>
+              </optgroup>
+              <optgroup label="Sciences and Social Sciences">
+                <option>BS Biology</option>
+                <option>BS Psychology</option>
+              </optgroup>
+              <option>Other Mapúa program</option>
+            </select>
+          </div>
+          <div>
+            <label for="year_level">Year level (if student)</label>
+            <select id="year_level">
+              <option value="">Select your year</option>
+              <option>1st Year</option>
+              <option>2nd Year</option>
+              <option>3rd Year</option>
+              <option>4th Year</option>
+              <option>5th Year</option>
+            </select>
+          </div>
+        </div>
         <div class="field"><label for="contact_no">Contact No.</label><input id="contact_no" placeholder="09XX-XXX-XXXX" maxlength="30" /></div>
       </div>
       <div class="field">

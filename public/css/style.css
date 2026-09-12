@@ -426,7 +426,7 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
 
 .center-page { position: relative; overflow: hidden; }
 .center-page::before { content: ""; position: absolute; width: 440px; height: 440px; border: 1px solid rgba(143,29,53,.12); border-radius: 50%; top: -180px; left: -140px; box-shadow: 0 0 0 28px rgba(143,29,53,.025), 0 0 0 56px rgba(143,29,53,.02); }
-body:has(.login-card), body:has(.signup-card) { background: var(--maroon-dark) !important; }
+body:has(.login-card), body:has(.signup-card) { background: #6e0e1e !important; }
 .login-card, .signup-card { position: relative; z-index: 1; border-radius: 18px !important; border: 1px solid rgba(222,216,209,.92) !important; box-shadow: 0 26px 70px rgba(40,24,25,.2) !important; }
 .login-card h1, .signup-card h1 { color: var(--maroon-dark); }
 

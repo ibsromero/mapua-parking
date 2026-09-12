@@ -4,8 +4,8 @@
   "description": "Parking reservations and vehicle sticker management for Mapua University.",
   "start_url": "/login.html",
   "display": "standalone",
-  "background_color": "#f5f6f8",
-  "theme_color": "#6e0e1e",
+  "background_color": "#f4f1ed",
+  "theme_color": "#8c1d40",
   "icons": [
     {
       "src": "/images/mapua-logo.png",

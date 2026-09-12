@@ -216,7 +216,7 @@ router.get('/verify/:token', requireLogin, async (req, res) => {
        FROM sticker_applications a
        JOIN users u ON u.id = a.user_id
        LEFT JOIN vehicles v ON v.id = a.vehicle_id
-       WHERE a.permit_token = $1`,
+      WHERE (a.permit_token = $1 OR a.permit_number = $1)`,
       [req.params.token]
     );
     const permit = rows[0];

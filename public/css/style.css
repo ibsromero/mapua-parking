@@ -402,9 +402,7 @@ tr:hover td { background: #fff9f6; }
 .stat-bar-label, th { color: var(--maroon-dark); }
 .alert-warning { color: #6f3612; }
 .alert-info { color: #514b49; }
-.alert-pending { background: var(--maroon); color: #fff; border: 1px solid var(--maroon-dark); box-shadow: 0 8px 20px rgba(140, 29, 64, .16); }
-.alert-pending strong { color: #fff; }
-.alert-pending a { color: #fff; }
+.alert-symbol { color: var(--maroon); }
 
 .lot-tab, .filter-tabs .btn { border-color: #d9d2cb; border-radius: 9px; background: rgba(255,255,255,.75); }
 .lot-tab.active, .filter-tabs .btn.active { background: var(--maroon); border-color: var(--maroon); color: #fff; box-shadow: 0 5px 12px rgba(143,29,53,.16); }

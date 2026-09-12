@@ -443,6 +443,48 @@ body:has(.login-card)::before, body:has(.signup-card)::before { display: none; }
 .login-card, .signup-card { position: relative; z-index: 1; border-radius: 18px !important; border: 1px solid rgba(222,216,209,.92) !important; box-shadow: 0 26px 70px rgba(40,24,25,.2) !important; }
 .login-card h1, .signup-card h1 { color: var(--maroon-dark); }
 
+/* Login landing surface */
+.login-page { background: var(--maroon-dark) !important; }
+.login-shell {
+  position: relative; isolation: isolate; gap: clamp(32px, 7vw, 104px); justify-content: center;
+  padding: clamp(28px, 6vw, 72px) clamp(24px, 7vw, 112px);
+  background: linear-gradient(125deg, rgba(255,255,255,.08), transparent 44%),
+    radial-gradient(circle at 84% 16%, rgba(253,185,19,.2), transparent 25%), var(--maroon-dark);
+}
+.login-shell::after {
+  content: ""; position: absolute; z-index: -1; width: min(64vw, 760px); height: min(64vw, 760px);
+  right: -20vw; bottom: -42vw; border: 1px solid rgba(253,185,19,.28); border-radius: 50%;
+  box-shadow: 0 0 0 28px rgba(253,185,19,.04), 0 0 0 56px rgba(253,185,19,.03);
+}
+.login-intro { width: min(100%, 430px); color: #fff; }
+.login-intro-mark {
+  display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: 28px;
+  border: 2px solid var(--gold); color: var(--gold); font-size: 28px; font-weight: 850;
+  line-height: 1; transform: skew(-8deg); box-shadow: 7px 7px 0 rgba(253,185,19,.2);
+}
+.login-kicker {
+  margin: 0 0 10px; color: var(--gold); font-size: 11px; font-weight: 800;
+  letter-spacing: .16em; text-transform: uppercase;
+}
+.login-intro h1 { max-width: 410px; margin: 0; color: #fff; font-size: clamp(2.4rem, 5vw, 4.5rem); line-height: .98; letter-spacing: -.045em; }
+.login-intro-copy { max-width: 370px; margin: 26px 0 0; color: rgba(255,255,255,.76); font-size: 16px; }
+.login-rule { width: 68px; height: 4px; margin: 30px 0 18px; background: var(--gold); }
+.login-campus-note { max-width: 300px; margin: 0; color: rgba(255,255,255,.58); font-size: 12px; }
+.login-card { width: min(100%, 440px); padding: clamp(28px, 4vw, 42px); background: #fff; }
+.login-card-header { margin-bottom: 28px; }
+.login-card .brand-logo-lg { width: min(100%, 220px); height: auto; margin: 0 0 26px; }
+.login-card-header h2 { margin: 0 0 6px; color: var(--maroon-dark); font-size: 30px; letter-spacing: -.035em; }
+.login-card p.sub { margin: 0; color: var(--text-muted); font-size: 14px; }
+.row-between { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 6px; }
+.row-between label { margin: 0 !important; }
+.checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; color: var(--text-muted); font-size: 14px; }
+.checkbox-row input { width: auto; min-height: auto; accent-color: var(--maroon); }
+.checkbox-row label { margin: 0; color: inherit; font-size: 14px; font-weight: 400; letter-spacing: 0; text-transform: none; }
+.login-signup { margin-top: 22px; color: var(--text-muted); font-size: 13px; text-align: center; }
+.login-signup a { font-weight: 700; }
+.login-demo-note { margin: 24px 0 0; padding-top: 18px; border-top: 1px solid #eee8e3; color: var(--text-muted); font-size: 11px; line-height: 1.8; text-align: center; }
+.login-demo-note code { padding: 2px 4px; border-radius: 3px; background: #f7f0ec; color: var(--maroon-dark); }
+
 @keyframes surface-rise {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
@@ -457,5 +499,11 @@ body:has(.login-card)::before, body:has(.signup-card)::before { display: none; }
   .container { padding: 24px 16px 36px; }
   .card { border-radius: 12px; }
   .stat-bar-item { padding: 17px 20px; }
+  .login-shell { align-items: stretch; gap: 34px; padding-top: 48px; padding-bottom: 48px; }
+  .login-intro { width: 100%; }
+  .login-intro-mark { margin-bottom: 22px; }
+  .login-intro h1 { max-width: 360px; font-size: clamp(2.45rem, 12vw, 3.7rem); }
+  .login-intro-copy { margin-top: 18px; }
+  .login-rule { margin: 22px 0 14px; }
 }
 

@@ -7,23 +7,25 @@
 <link rel="manifest" href="/manifest.webmanifest" />
 <title>Mapúa Parking System - Login</title>
 <link rel="stylesheet" href="/css/style.css" />
-<style>
-  body { background: var(--maroon-dark); }
-  .login-card { width: 420px; background: #fff; border-radius: 10px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); border: 1px solid rgba(0,0,0,0.06); }
-  .login-card h1 { text-align: center; font-size: 24px; margin: 16px 0 4px; }
-  .login-card p.sub { text-align: center; color: var(--text-muted); margin: 0 0 24px; font-size: 14px; }
-  .login-logo { display: block; margin: 0 auto; width: 64px; }
-  .row-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 14px; color: var(--text-muted); }
-  .checkbox-row input { width: auto; }
-</style>
 </head>
-<body>
-<div class="center-page">
-  <div class="login-card">
-    <img src="/images/mapua-logo.png" alt="Mapúa University" class="brand-logo-lg">
-    <h1>Mapúa Parking System</h1>
-    <p class="sub">Enter your credentials to manage your reservations</p>
+<body class="login-page">
+<main class="center-page login-shell">
+  <section class="login-intro" aria-label="Mapúa Parking System">
+    <div class="login-intro-mark">M</div>
+    <p class="login-kicker">Mapúa University</p>
+    <h1>Move through campus with confidence.</h1>
+    <p class="login-intro-copy">A simpler way to reserve your space, manage your vehicle, and arrive ready for the day.</p>
+    <div class="login-rule" aria-hidden="true"></div>
+    <p class="login-campus-note">Parking services for students, faculty, staff, and campus security.</p>
+  </section>
+
+  <section class="login-card" aria-labelledby="login-title">
+    <div class="login-card-header">
+      <img src="/images/mapua-logo.png" alt="Mapúa University" class="brand-logo-lg">
+      <p class="login-kicker">Parking Services</p>
+      <h2 id="login-title">Welcome back</h2>
+      <p class="sub">Sign in to continue to your parking account.</p>
+    </div>
 
     <form id="loginForm">
       <div class="field">
@@ -45,16 +47,16 @@
       <p id="loginError" class="error-text" style="display:none;"></p>
     </form>
 
-    <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--text-muted);">
+    <div class="login-signup">
       New student or employee? <a href="/signup.html">Create an account</a>
     </div>
-    <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-muted);">
+    <p class="login-demo-note">
       Demo student: <code>2021105432</code> / <code>student123</code><br/>
       Demo admin: <code>ADMIN-0001</code> / <code>admin123</code><br/>
       Demo guard: <code>GUARD-0001</code> / <code>GUARD123</code>
     </p>
-  </div>
-</div>
+  </section>
+</main>
 
 <script src="/js/common.js"></script>
 <script src="/js/login.js"></script>

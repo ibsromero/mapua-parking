@@ -39,9 +39,23 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
 body {
   margin: 0;
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
-  background: linear-gradient(140deg, #f8f9fb 0%, var(--bg) 55%, #f2eef0 100%);
+  background-color: #f7f4f3;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(110, 14, 30, 0.04) 0, rgba(110, 14, 30, 0.04) 1px, transparent 1px),
+    radial-gradient(circle at 80% 30%, rgba(110, 14, 30, 0.03) 0, rgba(110, 14, 30, 0.03) 1px, transparent 1px),
+    linear-gradient(180deg, #fdfcfc 0%, #f5f2f1 100%);
+  background-size: 22px 22px, 22px 22px, cover;
   color: var(--text);
   line-height: 1.5;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(110, 14, 30, 0.02), rgba(255, 255, 255, 0) 45%, rgba(110, 14, 30, 0.015));
 }
 
 h1, h2, h3 { line-height: 1.2; letter-spacing: -.02em; }
@@ -56,9 +70,9 @@ a { color: var(--maroon); }
   align-items: center;
   justify-content: space-between;
   padding: 14px max(20px, 4vw);
-  background: #fff;
+  background: rgba(255, 255, 255, 0.92);
   border-bottom: 1px solid var(--border);
-  box-shadow: 0 2px 12px rgba(31, 35, 42, .04);
+  box-shadow: 0 2px 8px rgba(31, 35, 42, .03);
   min-height: 68px;
 }
 .navbar .brand { font-size: 22px; font-weight: 800; color: var(--maroon); text-decoration: none; }
@@ -93,7 +107,11 @@ a { color: var(--maroon); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .card {
-  background: rgba(255, 255, 255, .96); border: 1px solid var(--border); border-radius: 8px; padding: clamp(18px, 3vw, 28px); box-shadow: var(--surface-shadow);
+  background: rgba(255, 255, 255, .94);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: clamp(18px, 3vw, 28px);
+  box-shadow: 0 10px 24px rgba(31, 35, 42, .04);
 }
 
 .guard-account-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }

@@ -7,16 +7,23 @@
 <link rel="manifest" href="/manifest.webmanifest" />
 <title>Mapúa Parking System - Login</title>
 <link rel="stylesheet" href="/css/style.css" />
+<style>
+  body { background: var(--maroon-dark); }
+  .login-card { width: 420px; background: #fff; border-radius: 10px; padding: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); border: 1px solid rgba(0,0,0,0.06); }
+  .login-card h1 { text-align: center; font-size: 24px; margin: 16px 0 4px; }
+  .login-card p.sub { text-align: center; color: var(--text-muted); margin: 0 0 24px; font-size: 14px; }
+  .login-logo { display: block; margin: 0 auto; width: 64px; }
+  .row-between { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; font-size: 14px; color: var(--text-muted); }
+  .checkbox-row input { width: auto; }
+</style>
 </head>
-<body class="login-page">
-<main class="center-page login-shell">
-  <section class="login-card" aria-labelledby="login-title">
-    <div class="login-card-header">
-      <img src="/images/mapua-logo.png" alt="Mapúa University" class="brand-logo-lg">
-      <p class="login-kicker">Parking Services</p>
-      <h2 id="login-title">Welcome back</h2>
-      <p class="sub">Sign in to continue to your parking account.</p>
-    </div>
+<body>
+<div class="center-page">
+  <div class="login-card">
+    <img src="/images/mapua-logo.png" alt="Mapúa University" class="brand-logo-lg">
+    <h1>Mapúa Parking System</h1>
+    <p class="sub">Enter your credentials to manage your reservations</p>
 
     <form id="loginForm">
       <div class="field">
@@ -38,16 +45,16 @@
       <p id="loginError" class="error-text" style="display:none;"></p>
     </form>
 
-    <div class="login-signup">
+    <div style="text-align:center;margin-top:16px;font-size:13px;color:var(--text-muted);">
       New student or employee? <a href="/signup.html">Create an account</a>
     </div>
-    <p class="login-demo-note">
+    <p style="text-align:center;margin-top:20px;font-size:12px;color:var(--text-muted);">
       Demo student: <code>2021105432</code> / <code>student123</code><br/>
       Demo admin: <code>ADMIN-0001</code> / <code>admin123</code><br/>
       Demo guard: <code>GUARD-0001</code> / <code>GUARD123</code>
     </p>
-  </section>
-</main>
+  </div>
+</div>
 
 <script src="/js/common.js"></script>
 <script src="/js/login.js"></script>

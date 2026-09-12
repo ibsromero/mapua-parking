@@ -1,4 +1,59 @@
 let allReservations = [];
+let scannerStream = null;
+let scannerRunning = false;
+
+function stopScanner() {
+  scannerRunning = false;
+  if (scannerStream) scannerStream.getTracks().forEach(track => track.stop());
+  scannerStream = null;
+  const video = document.getElementById('qrVideo');
+  video.hidden = true;
+  document.getElementById('startScanner').disabled = false;
+}
+
+async function scanQrCode() {
+  const status = document.getElementById('scannerStatus');
+  const video = document.getElementById('qrVideo');
+  if (!('BarcodeDetector' in window)) {
+    status.textContent = 'Camera QR scanning is not supported in this browser. Enter the token below.';
+    return;
+  }
+
+  try {
+    const detector = new BarcodeDetector({ formats: ['qr_code'] });
+    scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+    video.srcObject = scannerStream;
+    video.hidden = false;
+    await video.play();
+    scannerRunning = true;
+    document.getElementById('startScanner').disabled = true;
+    status.textContent = 'Point the camera at a permit QR code.';
+
+    const scanFrame = async () => {
+      if (!scannerRunning) return;
+      try {
+        const codes = await detector.detect(video);
+        if (codes[0]?.rawValue) {
+          document.getElementById('permitToken').value = codes[0].rawValue;
+          stopScanner();
+          document.getElementById('verifyForm').requestSubmit();
+          return;
+        }
+      } catch (_) {
+        status.textContent = 'Unable to read that QR code. Try holding it steady.';
+      }
+      requestAnimationFrame(scanFrame);
+    };
+    requestAnimationFrame(scanFrame);
+  } catch (err) {
+    stopScanner();
+    status.textContent = err.name === 'NotAllowedError'
+      ? 'Camera access was denied. Enter the token below instead.'
+      : 'Could not start the camera. Enter the token below instead.';
+  }
+}
+
+document.getElementById('startScanner').addEventListener('click', scanQrCode);
 
 document.getElementById('verifyForm').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -92,5 +147,7 @@ document.getElementById('rows').addEventListener('click', async (e) => {
 (async function () {
   const user = await requireAuth('guard');
   if (!user) return;
+  document.getElementById('currentGuardName').textContent = user.full_name;
+  document.getElementById('currentGuardId').textContent = `Guard ID: ${user.id_number}`;
   load();
 })();

@@ -15,6 +15,15 @@
 </div>
 
 <div class="container">
+  <div class="card guard-account-card" aria-label="Current guard account">
+    <div>
+      <p class="eyebrow">Current guard account</p>
+      <strong id="currentGuardName">Loading account...</strong>
+      <span class="muted" id="currentGuardId"></span>
+    </div>
+    <span class="badge badge-approved">Guard access</span>
+  </div>
+
   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
     <div>
       <h1>Check-In / Check-Out</h1>
@@ -25,6 +34,14 @@
 
   <div class="card" style="margin-top:20px;">
     <h3 style="margin-top:0;">Verify Digital Sticker</h3>
+    <div class="scanner-panel">
+      <div class="scanner-toolbar">
+        <p class="muted">Scan a permit QR code at the gate.</p>
+        <button class="btn" type="button" id="startScanner">Start QR scanner</button>
+      </div>
+      <video id="qrVideo" class="qr-video" playsinline muted hidden></video>
+      <p id="scannerStatus" class="muted" role="status" aria-live="polite"></p>
+    </div>
     <form id="verifyForm" style="display:flex;gap:12px;flex-wrap:wrap;">
       <input id="permitToken" required placeholder="Scan or enter QR token" style="flex:1;min-width:240px;" />
       <button class="btn btn-primary" type="submit">Verify permit</button>

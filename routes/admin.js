@@ -264,7 +264,6 @@ router.post('/slots/:slotId/exit', requireGuardOrAdmin, async (req, res) => {
 });
 
 // --- Guard account management (admin only) ---
-const ID_RE = /^[A-Za-z0-9-]{4,20}$/;
 
 // GET /api/admin/guards -> list guard accounts
 router.get('/guards', requireAdmin, async (req, res) => {
@@ -279,28 +278,24 @@ router.get('/guards', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/guards  { id_number, full_name, password } -> create a guard account.
+// POST /api/admin/guards  { full_name, password } -> create a guard account.
 // Guards don't self-register through the public sign-up page -- only an
 // admin can create one, same reasoning as "only actual Mapuans get accounts."
 router.post('/guards', requireAdmin, async (req, res) => {
-  const id_number = typeof req.body.id_number === 'string' ? req.body.id_number.trim() : '';
   const full_name = typeof req.body.full_name === 'string' ? req.body.full_name.trim().slice(0, 150) : '';
   const password = typeof req.body.password === 'string' ? req.body.password : '';
 
-  if (!ID_RE.test(id_number)) {
-    return res.status(400).json({ error: 'ID number must be 4-20 letters, numbers, or dashes.' });
-  }
   if (!full_name) return res.status(400).json({ error: 'Full name is required.' });
   if (password.length < 8 || password.length > 200) {
     return res.status(400).json({ error: 'Password must be at least 8 characters.' });
   }
 
   try {
-    const existing = await pool.query('SELECT id FROM users WHERE id_number = $1', [id_number]);
-    if (existing.rows[0]) {
-      return res.status(400).json({ error: 'That ID number is already registered.' });
-    }
     const password_hash = await bcrypt.hash(password, 12);
+    const { rows: idRows } = await pool.query(
+      `SELECT 'GUARD-' || LPAD(nextval('guard_id_sequence')::text, 4, '0') AS id_number`
+    );
+    const id_number = idRows[0].id_number;
     const { rows } = await pool.query(
       `INSERT INTO users (id_number, full_name, applicant_type, password_hash, role)
        VALUES ($1, $2, 'non_teaching', $3, 'guard') RETURNING id, id_number, full_name, created_at`,

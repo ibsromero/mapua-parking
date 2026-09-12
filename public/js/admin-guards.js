@@ -24,7 +24,6 @@ document.getElementById('addGuardForm').addEventListener('submit', async (e) => 
       method: 'POST',
       body: JSON.stringify({
         full_name: document.getElementById('full_name').value.trim(),
-        id_number: document.getElementById('id_number').value.trim(),
         password: document.getElementById('password').value
       })
     });

@@ -15,6 +15,22 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- Guard IDs are allocated by the server. Keep the sequence separate from the
+-- users table so existing account IDs remain unchanged.
+CREATE SEQUENCE IF NOT EXISTS guard_id_sequence START WITH 0 MINVALUE 0;
+SELECT setval(
+  'guard_id_sequence',
+  GREATEST(
+    COALESCE((
+      SELECT MAX((substring(id_number FROM '^GUARD-([0-9]+)$'))::INTEGER)
+      FROM users
+      WHERE role = 'guard' AND id_number ~ '^GUARD-[0-9]+$'
+    ), 0),
+    (SELECT last_value FROM guard_id_sequence)
+  ),
+  true
+);
+
 CREATE TABLE IF NOT EXISTS vehicles (
   id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

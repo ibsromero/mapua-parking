@@ -96,6 +96,15 @@ a { color: var(--maroon); }
   background: rgba(255, 255, 255, .96); border: 1px solid var(--border); border-radius: 8px; padding: clamp(18px, 3vw, 28px); box-shadow: var(--surface-shadow);
 }
 
+.guard-account-card { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.guard-account-card strong, .guard-account-card .muted { display: block; }
+.eyebrow { margin: 0 0 4px; color: var(--text-muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.generated-id { min-height: 46px; margin: 0; padding: 12px 14px; border: 1px dashed var(--border); border-radius: 8px; background: #f9fafb; }
+.scanner-panel { padding: 14px; margin-bottom: 14px; border: 1px solid var(--border); border-radius: 8px; background: #f9fafb; }
+.scanner-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.scanner-toolbar p, #scannerStatus { margin: 0; }
+.qr-video { display: block; width: min(100%, 420px); max-height: 280px; margin: 14px auto 0; border-radius: 8px; background: #111; object-fit: cover; }
+
 .permit-card { margin: 20px 0; border: 2px solid var(--maroon); background: linear-gradient(135deg, #fff 0%, #fff7f8 100%); }
 .permit-card-content { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; }
 .permit-title { margin: 12px 0 4px; }

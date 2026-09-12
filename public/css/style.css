@@ -462,6 +462,24 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   box-shadow: inset 0 0 0 16px rgba(253,185,19,.04), 0 0 0 18px rgba(253,185,19,.04);
   z-index: -1;
 }
+.center-page > * { position: relative; z-index: 1; }
+.center-page::selection { background: transparent; }
+
+body:has(.login-card), body:has(.signup-card) {
+  background:
+    linear-gradient(135deg, #6e0e1e 0%, #7a1526 45%, #8d2b1d 100%);
+}
+body:has(.login-card)::before, body:has(.signup-card)::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(120deg, transparent 0 58%, rgba(253,185,19,.08) 58% 60%, transparent 60% 100%),
+    linear-gradient(30deg, transparent 0 62%, rgba(253,185,19,.06) 62% 64%, transparent 64% 100%),
+    linear-gradient(90deg, transparent 0 72%, rgba(255,255,255,.04) 72% 76%, transparent 76% 100%);
+  pointer-events: none;
+  z-index: 0;
+}
 body:has(.login-card), body:has(.signup-card) { background: #6e0e1e !important; }
 body:has(.login-card)::before, body:has(.signup-card)::before { display: none; }
 .login-card, .signup-card { position: relative; z-index: 1; border-radius: 18px !important; border: 1px solid rgba(222,216,209,.92) !important; box-shadow: 0 26px 70px rgba(40,24,25,.2) !important; }

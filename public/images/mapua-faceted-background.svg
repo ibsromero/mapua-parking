@@ -1,64 +1,61 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">
-  <rect width="800" height="450" fill="#6e0e1e" />
-  <g stroke="#6e0e1e" stroke-width="2" stroke-linejoin="round">
-    <path d="M-40 18 20-18 132 48 72 84Z" fill="#f7f4ef" />
-    <path d="M132 48 72 84 132 120 244 54 304 18 244-18Z" fill="#8f172a" />
-    <path d="M132 48 244-18 304 18 192 84Z" fill="#4f0916" />
+  <rect width="800" height="450" fill="#f7f4ef" />
+  <defs>
+    <g id="block-a">
+      <path d="M0 32 54 0 108 32 54 64Z" fill="#f7f4ef" />
+      <path d="M0 32 54 64V128L0 96Z" fill="#8f172a" />
+      <path d="M54 64 108 32V96L54 128Z" fill="#4f0916" />
+    </g>
+    <g id="block-b">
+      <path d="M0 32 54 0 108 32 54 64Z" fill="#fdb913" />
+      <path d="M0 32 54 64V128L0 96Z" fill="#a32134" />
+      <path d="M54 64 108 32V96L54 128Z" fill="#570918" />
+    </g>
+    <g id="block-c">
+      <path d="M0 32 54 0 108 32 54 64Z" fill="#a9abad" />
+      <path d="M0 32 54 64V128L0 96Z" fill="#6e0e1e" />
+      <path d="M54 64 108 32V96L54 128Z" fill="#262326" />
+    </g>
+    <g id="block-d">
+      <path d="M0 32 54 0 108 32 54 64Z" fill="#a32134" />
+      <path d="M0 32 54 64V128L0 96Z" fill="#4f0916" />
+      <path d="M54 64 108 32V96L54 128Z" fill="#8f172a" />
+    </g>
+  </defs>
+  <g stroke="#f7f4ef" stroke-width="2" stroke-linejoin="round">
+    <use href="#block-a" x="-70" y="-34" />
+    <use href="#block-b" x="92" y="-34" />
+    <use href="#block-a" x="254" y="-34" />
+    <use href="#block-c" x="416" y="-34" />
+    <use href="#block-a" x="578" y="-34" />
+    <use href="#block-b" x="740" y="-34" />
 
-    <path d="M286-20 346 16 286 112 226 76Z" fill="#fdb913" />
-    <path d="M346 16 438-38 498-2 406 52Z" fill="#a32134" />
-    <path d="M346 16 406 52 346 148 286 112Z" fill="#8f172a" />
-    <path d="M406 52 498-2 558 34 466 88Z" fill="#262326" />
+    <use href="#block-d" x="-152" y="66" />
+    <use href="#block-a" x="10" y="66" />
+    <use href="#block-c" x="172" y="66" />
+    <use href="#block-a" x="334" y="66" />
+    <use href="#block-b" x="496" y="66" />
+    <use href="#block-a" x="658" y="66" />
 
-    <path d="M520-18 580 18 520 114 460 78Z" fill="#a9abad" />
-    <path d="M580 18 692-48 752-12 640 54Z" fill="#8f172a" />
-    <path d="M580 18 640 54 580 150 520 114Z" fill="#4f0916" />
-    <path d="M640 54 752-12 812 24 700 90Z" fill="#fdb913" />
+    <use href="#block-b" x="-70" y="166" />
+    <use href="#block-a" x="92" y="166" />
+    <use href="#block-d" x="254" y="166" />
+    <use href="#block-c" x="416" y="166" />
+    <use href="#block-a" x="578" y="166" />
+    <use href="#block-d" x="740" y="166" />
 
-    <path d="M-48 142 12 106 124 172 64 208Z" fill="#fdb913" />
-    <path d="M124 172 64 208 124 244 236 178 296 142 236 106Z" fill="#a32134" />
-    <path d="M124 172 236 106 296 142 184 208Z" fill="#8f172a" />
-    <path d="M236 178 296 142 356 178 296 274 236 238Z" fill="#262326" />
+    <use href="#block-a" x="-152" y="266" />
+    <use href="#block-c" x="10" y="266" />
+    <use href="#block-b" x="172" y="266" />
+    <use href="#block-a" x="334" y="266" />
+    <use href="#block-d" x="496" y="266" />
+    <use href="#block-a" x="658" y="266" />
 
-    <path d="M336 104 396 140 336 236 276 200Z" fill="#f7f4ef" />
-    <path d="M396 140 508 74 568 110 456 176Z" fill="#6e0e1e" />
-    <path d="M396 140 456 176 396 272 336 236Z" fill="#fdb913" />
-    <path d="M456 176 568 110 628 146 516 212Z" fill="#a9abad" />
-    <path d="M568 110 628 146 568 242 508 206Z" fill="#4f0916" />
-
-    <path d="M668 96 728 132 668 228 608 192Z" fill="#f7f4ef" />
-    <path d="M728 132 840 66 900 102 788 168Z" fill="#8f172a" />
-    <path d="M728 132 788 168 728 264 668 228Z" fill="#fdb913" />
-
-    <path d="M-26 270 34 234 94 330 34 366Z" fill="#a9abad" />
-    <path d="M34 234 146 168 206 204 94 270Z" fill="#4f0916" />
-    <path d="M34 366 94 270 154 306 94 402Z" fill="#8f172a" />
-    <path d="M94 270 206 204 266 240 154 306Z" fill="#f7f4ef" />
-    <path d="M206 204 266 240 206 336 146 300Z" fill="#fdb913" />
-
-    <path d="M286 264 346 228 406 324 346 360Z" fill="#a32134" />
-    <path d="M346 228 458 162 518 198 406 264Z" fill="#8f172a" />
-    <path d="M346 360 406 264 466 300 406 396Z" fill="#262326" />
-    <path d="M406 264 518 198 578 234 466 300Z" fill="#f7f4ef" />
-    <path d="M518 198 578 234 518 330 458 294Z" fill="#6e0e1e" />
-
-    <path d="M638 264 698 228 758 324 698 360Z" fill="#fdb913" />
-    <path d="M698 228 810 162 870 198 758 264Z" fill="#a32134" />
-    <path d="M698 360 758 264 818 300 758 396Z" fill="#4f0916" />
-    <path d="M758 264 870 198 930 234 818 300Z" fill="#a9abad" />
-
-    <path d="M-34 414 26 378 86 474 26 510Z" fill="#f7f4ef" />
-    <path d="M26 378 138 312 198 348 86 414Z" fill="#8f172a" />
-    <path d="M86 414 198 348 258 384 146 450Z" fill="#4f0916" />
-    <path d="M198 348 258 384 198 480 138 444Z" fill="#fdb913" />
-
-    <path d="M328 414 388 378 448 474 388 510Z" fill="#fdb913" />
-    <path d="M388 378 500 312 560 348 448 414Z" fill="#a9abad" />
-    <path d="M448 414 560 348 620 384 508 450Z" fill="#8f172a" />
-    <path d="M500 312 560 348 500 444 440 408Z" fill="#262326" />
-
-    <path d="M668 414 728 378 788 474 728 510Z" fill="#f7f4ef" />
-    <path d="M728 378 840 312 900 348 788 414Z" fill="#8f172a" />
-    <path d="M788 414 900 348 960 384 848 450Z" fill="#fdb913" />
+    <use href="#block-d" x="-70" y="366" />
+    <use href="#block-b" x="92" y="366" />
+    <use href="#block-a" x="254" y="366" />
+    <use href="#block-c" x="416" y="366" />
+    <use href="#block-b" x="578" y="366" />
+    <use href="#block-a" x="740" y="366" />
   </g>
 </svg>

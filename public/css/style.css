@@ -438,33 +438,41 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
 }
 
 .center-page { position: relative; overflow: hidden; isolation: isolate; }
-.center-page > * { position: relative; z-index: 1; }
-
-body:has(.login-card), body:has(.signup-card) {
-  background:
-    linear-gradient(135deg, #6e0e1e 0%, #7a1526 45%, #8d2b1d 100%);
-}
-body:has(.login-card)::before, body:has(.signup-card)::before {
+.center-page::before {
   content: "";
-  position: fixed;
-  inset: clamp(96px, 15vh, 150px) 0 0;
-  background:
-    repeating-linear-gradient(45deg, transparent 0 38px, rgba(253,185,19,.16) 38px 40px, transparent 40px 78px),
-    repeating-linear-gradient(-45deg, transparent 0 38px, rgba(255,255,255,.08) 38px 40px, transparent 40px 78px);
-  opacity: .8;
-  pointer-events: none;
+  position: absolute;
+  width: 310px;
+  height: 310px;
+  top: -178px;
+  left: -178px;
+  border: 2px solid rgba(253,185,19,.26);
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 14px rgba(253,185,19,.05);
   z-index: 0;
 }
+.center-page::after {
+  content: "";
+  position: absolute;
+  width: 360px;
+  height: 360px;
+  right: -218px;
+  bottom: -218px;
+  border: 2px solid rgba(253,185,19,.22);
+  transform: rotate(45deg);
+  box-shadow: 0 0 0 16px rgba(253,185,19,.04);
+  z-index: 0;
+}
+.center-page > * { position: relative; z-index: 1; }
+
 body:has(.login-card)::after, body:has(.signup-card)::after {
   content: "";
   position: fixed;
-  width: min(52vw, 620px);
-  height: 150px;
-  right: -32px;
-  bottom: 28px;
-  background: url("/images/mapua-logo.png") center / contain no-repeat;
-  filter: grayscale(1) brightness(0) invert(1);
-  opacity: .12;
+  width: 180px;
+  height: 180px;
+  right: 30px;
+  bottom: 26px;
+  background: url("/images/mapua.png") center / contain no-repeat;
+  opacity: .1;
   pointer-events: none;
   z-index: 0;
 }

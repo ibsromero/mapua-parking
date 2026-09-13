@@ -1,75 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1200" preserveAspectRatio="xMidYMid slice">
-  <rect width="900" height="1200" fill="#6e0e1e" />
-  <g stroke="#6e0e1e" stroke-width="2" stroke-linejoin="round">
-    <g transform="translate(70 92)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#fdb913" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#4f0916" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#8f172a" />
-    </g>
-    <g transform="translate(330 92)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#9b1d31" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#570918" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#fdb913" />
-    </g>
-    <g transform="translate(590 92)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#262326" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#4f0916" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#8f172a" />
-    </g>
-    <g transform="translate(850 92)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#fdb913" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#731020" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#a9abad" />
-    </g>
-    <g transform="translate(200 360)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#a9abad" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#5a0a18" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#8f172a" />
-    </g>
-    <g transform="translate(460 360)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#fdb913" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#6e0e1e" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#981c2f" />
-    </g>
-    <g transform="translate(720 360)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#8f172a" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#262326" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#fdb913" />
-    </g>
-    <g transform="translate(70 628)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#8f172a" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#fdb913" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#570918" />
-    </g>
-    <g transform="translate(330 628)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#262326" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#731020" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#a9abad" />
-    </g>
-    <g transform="translate(590 628)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#fdb913" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#4f0916" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#8f172a" />
-    </g>
-    <g transform="translate(850 628)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#981c2f" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#6e0e1e" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#fdb913" />
-    </g>
-    <g transform="translate(200 896)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#fdb913" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#8f172a" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#4f0916" />
-    </g>
-    <g transform="translate(460 896)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#a9abad" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#570918" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#981c2f" />
-    </g>
-    <g transform="translate(720 896)">
-      <path d="M0 0 92 54 0 108-92 54Z" fill="#8f172a" />
-      <path d="M-92 54 0 108V220L-92 166Z" fill="#fdb913" />
-      <path d="M0 108 92 54V166L0 220Z" fill="#262326" />
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480">
+  <rect width="480" height="480" fill="#f5f1ec" />
+  <g stroke="#f5f1ec" stroke-width="2" stroke-linejoin="round">
+    <g transform="translate(80 42)"><path d="M0 0 58 34 0 68-58 34Z" fill="#6e0e1e"/><path d="M-58 34 0 68V136L-58 102Z" fill="#4f0916"/><path d="M0 68 58 34V102L0 136Z" fill="#981c2f"/></g>
+    <g transform="translate(240 42)"><path d="M0 0 58 34 0 68-58 34Z" fill="#fdb913"/><path d="M-58 34 0 68V136L-58 102Z" fill="#6e0e1e"/><path d="M0 68 58 34V102L0 136Z" fill="#8f172a"/></g>
+    <g transform="translate(400 42)"><path d="M0 0 58 34 0 68-58 34Z" fill="#262326"/><path d="M-58 34 0 68V136L-58 102Z" fill="#6e0e1e"/><path d="M0 68 58 34V102L0 136Z" fill="#a9abad"/></g>
+    <g transform="translate(0 170)"><path d="M0 0 58 34 0 68-58 34Z" fill="#981c2f"/><path d="M-58 34 0 68V136L-58 102Z" fill="#570918"/><path d="M0 68 58 34V102L0 136Z" fill="#fdb913"/></g>
+    <g transform="translate(160 170)"><path d="M0 0 58 34 0 68-58 34Z" fill="#a9abad"/><path d="M-58 34 0 68V136L-58 102Z" fill="#4f0916"/><path d="M0 68 58 34V102L0 136Z" fill="#6e0e1e"/></g>
+    <g transform="translate(320 170)"><path d="M0 0 58 34 0 68-58 34Z" fill="#8f172a"/><path d="M-58 34 0 68V136L-58 102Z" fill="#262326"/><path d="M0 68 58 34V102L0 136Z" fill="#fdb913"/></g>
+    <g transform="translate(480 170)"><path d="M0 0 58 34 0 68-58 34Z" fill="#fdb913"/><path d="M-58 34 0 68V136L-58 102Z" fill="#731020"/><path d="M0 68 58 34V102L0 136Z" fill="#981c2f"/></g>
+    <g transform="translate(80 298)"><path d="M0 0 58 34 0 68-58 34Z" fill="#262326"/><path d="M-58 34 0 68V136L-58 102Z" fill="#8f172a"/><path d="M0 68 58 34V102L0 136Z" fill="#a9abad"/></g>
+    <g transform="translate(240 298)"><path d="M0 0 58 34 0 68-58 34Z" fill="#6e0e1e"/><path d="M-58 34 0 68V136L-58 102Z" fill="#fdb913"/><path d="M0 68 58 34V102L0 136Z" fill="#4f0916"/></g>
+    <g transform="translate(400 298)"><path d="M0 0 58 34 0 68-58 34Z" fill="#981c2f"/><path d="M-58 34 0 68V136L-58 102Z" fill="#6e0e1e"/><path d="M0 68 58 34V102L0 136Z" fill="#8f172a"/></g>
+    <g transform="translate(0 426)"><path d="M0 0 58 34 0 68-58 34Z" fill="#fdb913"/><path d="M-58 34 0 68V136L-58 102Z" fill="#4f0916"/><path d="M0 68 58 34V102L0 136Z" fill="#981c2f"/></g>
+    <g transform="translate(160 426)"><path d="M0 0 58 34 0 68-58 34Z" fill="#8f172a"/><path d="M-58 34 0 68V136L-58 102Z" fill="#262326"/><path d="M0 68 58 34V102L0 136Z" fill="#fdb913"/></g>
+    <g transform="translate(320 426)"><path d="M0 0 58 34 0 68-58 34Z" fill="#a9abad"/><path d="M-58 34 0 68V136L-58 102Z" fill="#6e0e1e"/><path d="M0 68 58 34V102L0 136Z" fill="#4f0916"/></g>
   </g>
 </svg>

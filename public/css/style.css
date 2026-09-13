@@ -483,12 +483,12 @@ body:has(.login-card)::before, body:has(.signup-card)::before {
 body:has(.login-card)::after, body:has(.signup-card)::after {
   content: "";
   position: fixed;
-  width: min(32vw, 360px);
-  height: 84px;
-  top: 34px;
-  right: 42px;
-  background: url("/images/mapua-logo.png") center / contain no-repeat;
-  opacity: .14;
+  width: min(38vw, 430px);
+  height: 160px;
+  top: 24px;
+  right: 28px;
+  background: url("/images/mapua-logo-modern.svg") center / contain no-repeat;
+  opacity: .3;
   pointer-events: none;
   z-index: 0;
 }

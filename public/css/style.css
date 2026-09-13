@@ -437,33 +437,15 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   outline-offset: 3px;
 }
 
-.center-page { position: relative; overflow: hidden; isolation: isolate; }
-.center-page::before {
-  content: "";
-  position: absolute;
-  width: 310px;
-  height: 310px;
-  top: -178px;
-  left: -178px;
-  border: 2px solid rgba(253,185,19,.26);
-  transform: rotate(45deg);
-  box-shadow: 0 0 0 14px rgba(253,185,19,.05);
-  z-index: 0;
-}
-.center-page::after {
-  content: "";
-  position: absolute;
-  width: 360px;
-  height: 360px;
-  right: -218px;
-  bottom: -218px;
-  border: 2px solid rgba(253,185,19,.22);
-  transform: rotate(45deg);
-  box-shadow: 0 0 0 16px rgba(253,185,19,.04);
-  z-index: 0;
+.center-page {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background: #6e0e1e url("/images/mapua-diamond-pattern.svg") center / 260px 260px;
 }
 .center-page > * { position: relative; z-index: 1; }
 
+body:has(.login-card)::before, body:has(.signup-card)::before { display: none; }
 body:has(.login-card)::after, body:has(.signup-card)::after {
   content: "";
   position: fixed;

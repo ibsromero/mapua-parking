@@ -316,6 +316,8 @@ body::before {
   background: linear-gradient(90deg, var(--maroon) 0 68%, #6b6461 68% 82%, var(--gold) 82%);
 }
 
+.auth-page::before { display: none; }
+
 h1, h2, h3 { color: var(--ink); letter-spacing: -.035em; }
 h1 { font-weight: 800; }
 h2, h3 { font-weight: 750; }
@@ -441,26 +443,50 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background: #f6f7f9;
+  justify-content: flex-end;
+  padding-right: clamp(32px, 10vw, 150px);
+  background: #f7f4f1;
 }
 .auth-page .center-page::before {
-  content: none;
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 44%;
+  background-color: var(--maroon-dark);
+  background-image:
+    linear-gradient(135deg, transparent 0 76%, rgba(253,185,19,.92) 76% 76.6%, transparent 76.6%),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.06) 0 1px, transparent 1px 26px);
 }
 .auth-page .center-page::after {
-  content: none;
+  content: "";
+  position: absolute;
+  top: 12%;
+  bottom: 12%;
+  left: 44%;
+  width: 4px;
+  border-radius: 4px;
+  background: var(--gold);
 }
 .center-page > * { position: relative; z-index: 1; }
 .auth-card {
   position: relative;
   z-index: 1;
   background: #fff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e1dcd7;
   border-top: 3px solid var(--maroon);
   border-radius: 16px;
   padding: 40px;
-  box-shadow: 0 16px 40px rgba(31, 35, 42, .08);
+  box-shadow: 0 20px 48px rgba(55, 25, 30, .12);
 }
 .auth-card h1 { color: var(--maroon-dark); }
+
+.auth-card input:-webkit-autofill,
+.auth-card input:-webkit-autofill:hover,
+.auth-card input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--text);
+  -webkit-box-shadow: 0 0 0 1000px #fbfaf8 inset;
+  transition: background-color 9999s ease-in-out 0s;
+}
 
 @keyframes surface-rise {
   from { opacity: 0; transform: translateY(10px); }
@@ -476,5 +502,13 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   .container { padding: 24px 16px 36px; }
   .card { border-radius: 12px; }
   .stat-bar-item { padding: 17px 20px; }
+
+  .auth-page .center-page {
+    justify-content: center;
+    padding: 28px 20px;
+  }
+  .auth-page .center-page::before,
+  .auth-page .center-page::after { display: none; }
+  .auth-card { padding: 32px 24px; }
 }
 

@@ -444,7 +444,7 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   overflow: hidden;
   isolation: isolate;
   justify-content: center;
-  background: #f2e9ea;
+  background: #e6dcde;
 }
 .auth-page .center-page::before {
   content: "";
@@ -470,8 +470,8 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
 .auth-card {
   position: relative;
   z-index: 1;
-  background: #fcfbfa;
-  border: 1px solid #dcd7d2;
+  background: #f7f4f1;
+  border: 1px solid #d3cbc7;
   border-top: 3px solid var(--maroon);
   border-radius: 16px;
   padding: 40px;
@@ -480,15 +480,15 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
 .auth-card h1 { color: var(--maroon-dark); }
 .auth-card input,
 .auth-card select {
-  background: #f4f2f0;
-  border-color: #d8d2cd;
+  background: #ebe7e4;
+  border-color: #cec5c0;
 }
 
 .auth-card input:-webkit-autofill,
 .auth-card input:-webkit-autofill:hover,
 .auth-card input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--text);
-  -webkit-box-shadow: 0 0 0 1000px #f4f2f0 inset;
+  -webkit-box-shadow: 0 0 0 1000px #ebe7e4 inset;
   transition: background-color 9999s ease-in-out 0s;
 }
 

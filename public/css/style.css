@@ -446,10 +446,9 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   justify-content: center;
   background: #f7f4f1;
   background-image:
-    linear-gradient(135deg, transparent 0 49%, rgba(110,14,30,.13) 49% 50%, transparent 50%),
-    linear-gradient(45deg, transparent 0 49%, rgba(110,14,30,.075) 49% 49.7%, transparent 49.7%),
-    linear-gradient(90deg, transparent 0 89%, rgba(253,185,19,.2) 89% 90%, transparent 90%);
-  background-size: 150px 150px, 150px 150px, 210px 210px;
+    repeating-linear-gradient(135deg, rgba(110,14,30,.095) 0 1px, transparent 1px 30px),
+    linear-gradient(90deg, transparent 0 89%, rgba(253,185,19,.18) 89% 90%, transparent 90%);
+  background-size: auto, 210px 210px;
 }
 .auth-page .center-page::before {
   content: "";

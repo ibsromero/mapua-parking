@@ -441,22 +441,14 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background: #6e0e1e url("/images/mapua-diamond-pattern.svg") center / 480px 480px;
+  background: #6e0e1e url("/images/mapua-faceted-background.svg") center / cover no-repeat;
 }
 .center-page > * { position: relative; z-index: 1; }
 
-body:has(.login-card)::before, body:has(.signup-card)::before { display: none; }
+body:has(.login-card)::before, body:has(.signup-card)::before,
 body:has(.login-card)::after, body:has(.signup-card)::after {
-  content: "";
-  position: fixed;
-  width: 180px;
-  height: 180px;
-  right: 30px;
-  bottom: 26px;
-  background: url("/images/mapua.png") center / contain no-repeat;
-  opacity: .1;
-  pointer-events: none;
-  z-index: 0;
+  content: none !important;
+  display: none !important;
 }
 body:has(.login-card), body:has(.signup-card) { background: #6e0e1e !important; }
 .login-card, .signup-card { position: relative; z-index: 1; border-radius: 18px !important; border: 1px solid rgba(222,216,209,.92) !important; box-shadow: 0 26px 70px rgba(40,24,25,.2) !important; }

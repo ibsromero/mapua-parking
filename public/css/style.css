@@ -447,7 +447,7 @@ body:has(.login-card), body:has(.signup-card) {
 body:has(.login-card)::before, body:has(.signup-card)::before {
   content: "";
   position: fixed;
-  inset: 0;
+  inset: clamp(96px, 15vh, 150px) 0 0;
   background:
     repeating-linear-gradient(45deg, transparent 0 38px, rgba(253,185,19,.16) 38px 40px, transparent 40px 78px),
     repeating-linear-gradient(-45deg, transparent 0 38px, rgba(255,255,255,.08) 38px 40px, transparent 40px 78px);

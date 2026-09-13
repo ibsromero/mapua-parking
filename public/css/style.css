@@ -441,7 +441,7 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background: #6e0e1e url("/images/mapua-diamond-pattern.svg") center / 260px 260px;
+  background: #6e0e1e url("/images/mapua-diamond-pattern.svg") center / 480px 480px;
 }
 .center-page > * { position: relative; z-index: 1; }
 

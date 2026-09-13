@@ -476,7 +476,9 @@ body:has(.login-card)::before, body:has(.signup-card)::before {
   background:
     linear-gradient(120deg, transparent 0 58%, rgba(253,185,19,.08) 58% 60%, transparent 60% 100%),
     linear-gradient(30deg, transparent 0 62%, rgba(253,185,19,.06) 62% 64%, transparent 64% 100%),
-    linear-gradient(90deg, transparent 0 72%, rgba(255,255,255,.04) 72% 76%, transparent 76% 100%);
+    linear-gradient(90deg, transparent 0 72%, rgba(255,255,255,.04) 72% 76%, transparent 76% 100%),
+    linear-gradient(135deg, transparent 0 68%, rgba(255,255,255,.03) 68% 70%, transparent 70% 100%),
+    linear-gradient(60deg, transparent 0 62%, rgba(253,185,19,.05) 62% 64%, transparent 64% 100%);
   pointer-events: none;
   z-index: 0;
 }

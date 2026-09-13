@@ -450,7 +450,7 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
-  width: 48%;
+  width: 60%;
   background-color: var(--maroon);
   background-image:
     linear-gradient(135deg, transparent 0 76%, rgba(253,185,19,.65) 76% 76.5%, transparent 76.5%),
@@ -461,7 +461,7 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   position: absolute;
   top: 16%;
   bottom: 16%;
-  left: 48%;
+  left: 60%;
   width: 2px;
   border-radius: 4px;
   background: rgba(253,185,19,.72);

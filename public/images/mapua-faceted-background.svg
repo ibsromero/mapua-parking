@@ -1,18 +1,50 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 480">
-  <rect width="480" height="480" fill="#f5f1ec" />
-  <g stroke="#f5f1ec" stroke-width="2" stroke-linejoin="round">
-    <g transform="translate(80 42)"><path d="M0 0 58 34 0 68-58 34Z" fill="#6e0e1e"/><path d="M-58 34 0 68V136L-58 102Z" fill="#4f0916"/><path d="M0 68 58 34V102L0 136Z" fill="#981c2f"/></g>
-    <g transform="translate(240 42)"><path d="M0 0 58 34 0 68-58 34Z" fill="#fdb913"/><path d="M-58 34 0 68V136L-58 102Z" fill="#6e0e1e"/><path d="M0 68 58 34V102L0 136Z" fill="#8f172a"/></g>
-    <g transform="translate(400 42)"><path d="M0 0 58 34 0 68-58 34Z" fill="#262326"/><path d="M-58 34 0 68V136L-58 102Z" fill="#6e0e1e"/><path d="M0 68 58 34V102L0 136Z" fill="#a9abad"/></g>
-    <g transform="translate(0 170)"><path d="M0 0 58 34 0 68-58 34Z" fill="#981c2f"/><path d="M-58 34 0 68V136L-58 102Z" fill="#570918"/><path d="M0 68 58 34V102L0 136Z" fill="#fdb913"/></g>
-    <g transform="translate(160 170)"><path d="M0 0 58 34 0 68-58 34Z" fill="#a9abad"/><path d="M-58 34 0 68V136L-58 102Z" fill="#4f0916"/><path d="M0 68 58 34V102L0 136Z" fill="#6e0e1e"/></g>
-    <g transform="translate(320 170)"><path d="M0 0 58 34 0 68-58 34Z" fill="#8f172a"/><path d="M-58 34 0 68V136L-58 102Z" fill="#262326"/><path d="M0 68 58 34V102L0 136Z" fill="#fdb913"/></g>
-    <g transform="translate(480 170)"><path d="M0 0 58 34 0 68-58 34Z" fill="#fdb913"/><path d="M-58 34 0 68V136L-58 102Z" fill="#731020"/><path d="M0 68 58 34V102L0 136Z" fill="#981c2f"/></g>
-    <g transform="translate(80 298)"><path d="M0 0 58 34 0 68-58 34Z" fill="#262326"/><path d="M-58 34 0 68V136L-58 102Z" fill="#8f172a"/><path d="M0 68 58 34V102L0 136Z" fill="#a9abad"/></g>
-    <g transform="translate(240 298)"><path d="M0 0 58 34 0 68-58 34Z" fill="#6e0e1e"/><path d="M-58 34 0 68V136L-58 102Z" fill="#fdb913"/><path d="M0 68 58 34V102L0 136Z" fill="#4f0916"/></g>
-    <g transform="translate(400 298)"><path d="M0 0 58 34 0 68-58 34Z" fill="#981c2f"/><path d="M-58 34 0 68V136L-58 102Z" fill="#6e0e1e"/><path d="M0 68 58 34V102L0 136Z" fill="#8f172a"/></g>
-    <g transform="translate(0 426)"><path d="M0 0 58 34 0 68-58 34Z" fill="#fdb913"/><path d="M-58 34 0 68V136L-58 102Z" fill="#4f0916"/><path d="M0 68 58 34V102L0 136Z" fill="#981c2f"/></g>
-    <g transform="translate(160 426)"><path d="M0 0 58 34 0 68-58 34Z" fill="#8f172a"/><path d="M-58 34 0 68V136L-58 102Z" fill="#262326"/><path d="M0 68 58 34V102L0 136Z" fill="#fdb913"/></g>
-    <g transform="translate(320 426)"><path d="M0 0 58 34 0 68-58 34Z" fill="#a9abad"/><path d="M-58 34 0 68V136L-58 102Z" fill="#6e0e1e"/><path d="M0 68 58 34V102L0 136Z" fill="#4f0916"/></g>
+  <rect width="480" height="480" fill="#f7f4ef" />
+  <defs>
+    <g id="cube-maroon">
+      <path d="M0 34 60 0 120 34 60 69Z" fill="#f7f4ef" />
+      <path d="M0 34 60 69V139L0 104Z" fill="#8f172a" />
+      <path d="M60 69 120 34V104L60 139Z" fill="#4f0916" />
+    </g>
+    <g id="cube-gold">
+      <path d="M0 34 60 0 120 34 60 69Z" fill="#fdb913" />
+      <path d="M0 34 60 69V139L0 104Z" fill="#8f172a" />
+      <path d="M60 69 120 34V104L60 139Z" fill="#4f0916" />
+    </g>
+    <g id="cube-gray">
+      <path d="M0 34 60 0 120 34 60 69Z" fill="#a9abad" />
+      <path d="M0 34 60 69V139L0 104Z" fill="#6e0e1e" />
+      <path d="M60 69 120 34V104L60 139Z" fill="#262326" />
+    </g>
+    <g id="cube-red">
+      <path d="M0 34 60 0 120 34 60 69Z" fill="#f7f4ef" />
+      <path d="M0 34 60 69V139L0 104Z" fill="#a32134" />
+      <path d="M60 69 120 34V104L60 139Z" fill="#6e0e1e" />
+    </g>
+  </defs>
+  <g>
+    <use href="#cube-maroon" x="-60" y="-70" />
+    <use href="#cube-gold" x="60" y="-70" />
+    <use href="#cube-maroon" x="180" y="-70" />
+    <use href="#cube-gray" x="300" y="-70" />
+    <use href="#cube-maroon" x="420" y="-70" />
+    <use href="#cube-red" x="0" y="35" />
+    <use href="#cube-maroon" x="120" y="35" />
+    <use href="#cube-gold" x="240" y="35" />
+    <use href="#cube-maroon" x="360" y="35" />
+    <use href="#cube-maroon" x="-60" y="140" />
+    <use href="#cube-gray" x="60" y="140" />
+    <use href="#cube-maroon" x="180" y="140" />
+    <use href="#cube-red" x="300" y="140" />
+    <use href="#cube-maroon" x="420" y="140" />
+    <use href="#cube-gold" x="0" y="245" />
+    <use href="#cube-maroon" x="120" y="245" />
+    <use href="#cube-gray" x="240" y="245" />
+    <use href="#cube-maroon" x="360" y="245" />
+    <use href="#cube-maroon" x="-60" y="350" />
+    <use href="#cube-red" x="60" y="350" />
+    <use href="#cube-gold" x="180" y="350" />
+    <use href="#cube-maroon" x="300" y="350" />
+    <use href="#cube-gray" x="420" y="350" />
   </g>
 </svg>

@@ -441,7 +441,7 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   position: relative;
   overflow: hidden;
   isolation: isolate;
-  background: #6e0e1e url("/images/mapua-faceted-background.svg") right bottom / min(720px, 62vw) auto no-repeat;
+  background: #6e0e1e url("/images/mapua-faceted-background.svg") center / min(960px, 100vw) auto no-repeat;
 }
 .center-page > * { position: relative; z-index: 1; }
 

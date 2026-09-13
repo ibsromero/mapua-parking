@@ -1,45 +1,57 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 620">
-  <rect width="720" height="620" fill="#6e0e1e" />
-  <g stroke="#6e0e1e" stroke-width="2" stroke-linejoin="round">
-    <g transform="translate(270 110)">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 720">
+  <defs>
+    <g id="cube-white">
       <path d="M0 34 60 0 120 34 60 69Z" fill="#f7f4ef" />
       <path d="M0 34 60 69V139L0 104Z" fill="#8f172a" />
       <path d="M60 69 120 34V104L60 139Z" fill="#4f0916" />
     </g>
-    <g transform="translate(430 110)">
+    <g id="cube-gold">
       <path d="M0 34 60 0 120 34 60 69Z" fill="#fdb913" />
       <path d="M0 34 60 69V139L0 104Z" fill="#8f172a" />
       <path d="M60 69 120 34V104L60 139Z" fill="#4f0916" />
     </g>
-    <g transform="translate(590 110)">
+    <g id="cube-gray">
       <path d="M0 34 60 0 120 34 60 69Z" fill="#a9abad" />
       <path d="M0 34 60 69V139L0 104Z" fill="#6e0e1e" />
       <path d="M60 69 120 34V104L60 139Z" fill="#262326" />
     </g>
-    <g transform="translate(190 270)">
+    <g id="cube-red">
       <path d="M0 34 60 0 120 34 60 69Z" fill="#a32134" />
-      <path d="M0 34 60 69V139L0 104Z" fill="#4f0916" />
+      <path d="M0 34 60 69V139L0 104Z" fill="#570918" />
       <path d="M60 69 120 34V104L60 139Z" fill="#8f172a" />
     </g>
-    <g transform="translate(350 270)">
-      <path d="M0 34 60 0 120 34 60 69Z" fill="#f7f4ef" />
-      <path d="M0 34 60 69V139L0 104Z" fill="#6e0e1e" />
-      <path d="M60 69 120 34V104L60 139Z" fill="#fdb913" />
-    </g>
-    <g transform="translate(510 270)">
-      <path d="M0 34 60 0 120 34 60 69Z" fill="#8f172a" />
-      <path d="M0 34 60 69V139L0 104Z" fill="#262326" />
-      <path d="M60 69 120 34V104L60 139Z" fill="#fdb913" />
-    </g>
-    <g transform="translate(270 430)">
-      <path d="M0 34 60 0 120 34 60 69Z" fill="#fdb913" />
-      <path d="M0 34 60 69V139L0 104Z" fill="#4f0916" />
-      <path d="M60 69 120 34V104L60 139Z" fill="#8f172a" />
-    </g>
-    <g transform="translate(430 430)">
-      <path d="M0 34 60 0 120 34 60 69Z" fill="#262326" />
-      <path d="M0 34 60 69V139L0 104Z" fill="#731020" />
-      <path d="M60 69 120 34V104L60 139Z" fill="#a9abad" />
-    </g>
+  </defs>
+  <g stroke="#6e0e1e" stroke-width="2" stroke-linejoin="round">
+    <use href="#cube-white" x="-72" y="-58" />
+    <use href="#cube-gold" x="76" y="-42" />
+    <use href="#cube-red" x="224" y="-70" />
+    <use href="#cube-gray" x="386" y="-40" />
+    <use href="#cube-white" x="548" y="-62" />
+    <use href="#cube-gold" x="710" y="-35" />
+    <use href="#cube-red" x="850" y="-68" />
+
+    <use href="#cube-red" x="-132" y="100" />
+    <use href="#cube-white" x="28" y="112" />
+    <use href="#cube-gray" x="188" y="92" />
+    <use href="#cube-gold" x="742" y="96" />
+    <use href="#cube-white" x="886" y="120" />
+
+    <use href="#cube-gold" x="-82" y="252" />
+    <use href="#cube-red" x="62" y="270" />
+    <use href="#cube-gray" x="216" y="244" />
+    <use href="#cube-red" x="756" y="250" />
+    <use href="#cube-white" x="902" y="270" />
+
+    <use href="#cube-white" x="-142" y="416" />
+    <use href="#cube-gold" x="18" y="430" />
+    <use href="#cube-red" x="176" y="404" />
+    <use href="#cube-gray" x="336" y="448" />
+    <use href="#cube-white" x="704" y="424" />
+    <use href="#cube-gold" x="858" y="446" />
+
+    <use href="#cube-red" x="-76" y="584" />
+    <use href="#cube-gray" x="82" y="566" />
+    <use href="#cube-white" x="246" y="588" />
+    <use href="#cube-gold" x="724" y="570" />
   </g>
 </svg>

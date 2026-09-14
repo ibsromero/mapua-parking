@@ -14,7 +14,7 @@ const router = express.Router();
 // disk at runtime doesn't reliably survive; Neon's Postgres storage does.
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  limits: { fileSize: 5 * 1024 * 1024, files: 3, fields: 20 }, // 5MB per file
   fileFilter: (req, file, cb) => {
     const ok = ['.pdf', '.jpg', '.jpeg', '.png'].includes(path.extname(file.originalname).toLowerCase());
     cb(ok ? null : new Error('Only PDF, JPG, PNG files are allowed.'), ok);
@@ -28,8 +28,17 @@ const uploadFields = upload.fields([
 ]);
 
 const MIME_BY_EXT = { '.pdf': 'application/pdf', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png' };
+function hasValidSignature(file) {
+  const extension = path.extname(file.originalname).toLowerCase();
+  if (extension === '.pdf') return file.buffer.subarray(0, 5).toString() === '%PDF-';
+  if (extension === '.jpg' || extension === '.jpeg') {
+    return file.buffer.length >= 3 && file.buffer[0] === 0xff && file.buffer[1] === 0xd8 && file.buffer[2] === 0xff;
+  }
+  if (extension === '.png') return file.buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  return false;
+}
 function mimeFor(file) {
-  return file.mimetype || MIME_BY_EXT[path.extname(file.originalname).toLowerCase()] || 'application/octet-stream';
+  return MIME_BY_EXT[path.extname(file.originalname).toLowerCase()] || 'application/octet-stream';
 }
 
 // POST /api/applications  (multipart form: vehicle_id + files + rules_acknowledged)
@@ -46,6 +55,9 @@ router.post('/', requireLogin, uploadFields, async (req, res) => {
   }
   if (!orCr || !license || !uniId) {
     return res.status(400).json({ error: 'Please upload all required documents before submitting.' });
+  }
+  if (![orCr, license, uniId].every(hasValidSignature)) {
+    return res.status(400).json({ error: 'One or more uploaded documents has an unsupported file format.' });
   }
   if (!rulesAck) {
     return res.status(400).json({ error: 'You must acknowledge the parking rules before submitting.' });

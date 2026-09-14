@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const pool = require('../db/pool');
+const { csrfToken } = require('../middleware/csrf');
 
 const router = express.Router();
 
@@ -22,6 +23,10 @@ const registerLimiter = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many signups from this network. Please try again later.' }
 });
+
+// The browser requests this before login/register, while the session is still
+// anonymous. The token is tied to the same server-side session cookie.
+router.get('/csrf', csrfToken);
 
 // POST /api/auth/register  - used by the sticker application flow to create
 // a login (id_number + password) for a new applicant.

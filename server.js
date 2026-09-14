@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const pgSession = require('connect-pg-simple')(session);
 const pool = require('./db/pool');
+const { requireCsrf } = require('./middleware/csrf');
 
 const authRoutes = require('./routes/auth');
 const reservationRoutes = require('./routes/reservations');
@@ -57,10 +58,14 @@ app.use(
       httpOnly: true,
       sameSite: 'lax', // mitigates CSRF on state-changing requests from other origins
       maxAge: 1000 * 60 * 60 * 8, // 8 hours
-      secure: isProd
+      secure: isProd,
+      path: '/'
     }
   })
 );
+
+// All state-changing API requests must carry the token issued for this session.
+app.use('/api', requireCsrf);
 
 // Generic rate limiting for the whole API - tighter limit specifically on
 // /api/auth/login below to slow down credential-stuffing / brute force.

@@ -243,18 +243,18 @@ takes ~30–60 seconds to wake up on the next request.
 ## Security notes
 
 Built with a security-first mindset: bcrypt password hashing, server-side
-sessions (not client-stored tokens), every admin route checked server-side
-(not just hidden in the UI), all database queries parameterized, input
-validated with allowlists rather than just "is it present," uploaded
-documents served through an authenticated route instead of public static
-files, rate limiting on login/registration, and standard security headers
-(CSP, clickjacking protection, HSTS) via Helmet.
+sessions (not client-stored tokens), a server-issued CSRF token on every
+state-changing API request, every admin route checked server-side (not just
+hidden in the UI), all database queries parameterized, input validated with
+allowlists rather than just "is it present," uploaded documents served through
+an authenticated route instead of public static files, upload size and file
+signature checks, rate limiting on login/registration, and standard security
+headers (CSP, clickjacking protection, HSTS) via Helmet.
 
-Known gaps, reasonable for a class project but worth knowing about: no CSRF
-token beyond `sameSite=lax` cookies, no file content-sniffing (uploads are
-checked by extension only), no email-based password reset, no 2FA. A real
-production deployment handling real personal data (IDs, license photos)
-would want a fuller review beyond what's here.
+Remaining policy items for a higher-assurance production deployment include
+email-based password reset, 2FA, malware scanning for uploaded documents, and
+an independent privacy/security review because the system handles identity
+documents.
 
 ## API overview
 

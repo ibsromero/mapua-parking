@@ -1,15 +1,38 @@
 // Small fetch wrapper. Always sends/receives JSON and credentials (session cookie).
+let csrfTokenPromise;
+
+async function getCsrfToken() {
+  if (!csrfTokenPromise) {
+    csrfTokenPromise = fetch('/api/auth/csrf', { credentials: 'same-origin' })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Unable to establish a secure session.');
+        const data = await res.json();
+        return data.csrfToken;
+      })
+      .catch((error) => {
+        csrfTokenPromise = null;
+        throw error;
+      });
+  }
+  return csrfTokenPromise;
+}
+
 async function api(path, options = {}) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeout || 15000);
   const { timeout: _timeout, ...fetchOptions } = options;
   let res;
   try {
+    const headers = new Headers(fetchOptions.headers || {});
+    if (!(fetchOptions.body instanceof FormData)) headers.set('Content-Type', 'application/json');
+    if (!['GET', 'HEAD', 'OPTIONS'].includes((fetchOptions.method || 'GET').toUpperCase())) {
+      headers.set('X-CSRF-Token', await getCsrfToken());
+    }
     res = await fetch(path, {
       credentials: 'same-origin',
-      headers: fetchOptions.body instanceof FormData ? {} : { 'Content-Type': 'application/json' },
+      ...fetchOptions,
+      headers,
       signal: controller.signal,
-      ...fetchOptions
     });
   } catch (error) {
     if (error.name === 'AbortError') throw new Error('The request took too long. Check your connection and try again.');
@@ -26,6 +49,9 @@ async function api(path, options = {}) {
   }
   if (!res.ok) {
     throw new Error((data && data.error) || `Request failed (${res.status})`);
+  }
+  if (path === '/api/auth/login' || path === '/api/auth/register') {
+    csrfTokenPromise = null;
   }
   return data;
 }

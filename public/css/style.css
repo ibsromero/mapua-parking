@@ -445,8 +445,6 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   isolation: isolate;
   justify-content: center;
   background: #f7f4f1;
-  background-image:
-    repeating-linear-gradient(135deg, rgba(110,14,30,.085) 0 1px, transparent 1px 30px);
 }
 .auth-page .center-page::before {
   content: "";
@@ -463,9 +461,7 @@ textarea:focus-visible, .btn:focus-visible, .slot:focus-visible, [tabindex]:focu
   z-index: 0;
   pointer-events: none;
   background-image:
-    linear-gradient(135deg, transparent 0 67%, rgba(253,185,19,.25) 67% 67.18%, transparent 67.18%),
-    linear-gradient(135deg, transparent 0 69.5%, rgba(253,185,19,.66) 69.5% 69.8%, transparent 69.8%),
-    linear-gradient(135deg, transparent 0 72%, rgba(253,185,19,.25) 72% 72.18%, transparent 72.18%),
+    linear-gradient(135deg, transparent 0 69.5%, rgba(253,185,19,.68) 69.5% 69.8%, transparent 69.8%),
     linear-gradient(90deg, transparent 0 60%, rgba(253,185,19,.6) 60% 60.12%, transparent 60.12%);
 }
 .center-page > * { position: relative; z-index: 1; }

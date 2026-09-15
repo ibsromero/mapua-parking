@@ -23,7 +23,12 @@ function requireCsrf(req, res, next) {
     return res.status(403).json({ error: 'Invalid CSRF token.' });
   }
 
-  const valid = crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+  const providedBuffer = Buffer.from(provided);
+  const expectedBuffer = Buffer.from(expected);
+  if (providedBuffer.length !== expectedBuffer.length) {
+    return res.status(403).json({ error: 'Invalid CSRF token.' });
+  }
+  const valid = crypto.timingSafeEqual(providedBuffer, expectedBuffer);
   if (!valid) return res.status(403).json({ error: 'Invalid CSRF token.' });
   next();
 }

@@ -1,6 +1,10 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { validName, positiveInteger } = require('../middleware/validation');
+const {
+  validName,
+  positiveInteger,
+  normalizeRequestBody
+} = require('../middleware/validation');
 
 test('validName accepts normal names and common separators', () => {
   assert.equal(validName('Maria Dela Cruz'), true);
@@ -28,4 +32,22 @@ test('positiveInteger rejects partial parses', () => {
   assert.equal(positiveInteger('12abc'), null);
   assert.equal(positiveInteger('-1'), null);
   assert.equal(positiveInteger('1.5'), null);
+});
+
+test('normalizeRequestBody makes missing bodies safe and rejects non-objects', () => {
+  const next = () => {};
+  const missing = { method: 'POST' };
+  normalizeRequestBody(missing, {}, next);
+  assert.deepEqual(missing.body, {});
+
+  let response;
+  normalizeRequestBody(
+    { method: 'POST', body: null },
+    { status: (code) => ({ json: (payload) => { response = { code, payload }; } }) },
+    next
+  );
+  assert.deepEqual(response, {
+    code: 400,
+    payload: { error: 'Request body must be a JSON object.' }
+  });
 });

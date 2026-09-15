@@ -19,4 +19,16 @@ function positiveInteger(value) {
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-module.exports = { cleanString, validName, positiveInteger };
+function normalizeRequestBody(req, res, next) {
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next();
+  if (req.body === undefined) {
+    req.body = {};
+    return next();
+  }
+  if (req.body === null || typeof req.body !== 'object' || Array.isArray(req.body)) {
+    return res.status(400).json({ error: 'Request body must be a JSON object.' });
+  }
+  next();
+}
+
+module.exports = { cleanString, validName, positiveInteger, normalizeRequestBody };

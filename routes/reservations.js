@@ -204,7 +204,7 @@ router.post('/', requireLogin, async (req, res) => {
   } catch (err) {
     await client.query('ROLLBACK');
     console.error(err);
-    res.status(500).json({ error: err.message || 'Failed to create reservation.' });
+    res.status(500).json({ error: 'Failed to create reservation.' });
   } finally {
     client.release();
   }
@@ -268,8 +268,12 @@ const MAX_EXTEND_MINUTES = 180; // cap a single extension request (3 hours) to p
 router.post('/:id/extend', requireLogin, async (req, res) => {
   const reservationId = positiveInteger(req.params.id);
   if (!reservationId) return res.status(400).json({ error: 'Invalid reservation ID.' });
-  let extraMinutes = positiveInteger(req.body.extra_minutes);
-  if (!extraMinutes) extraMinutes = 60;
+  const extraMinutes = req.body.extra_minutes === undefined
+    ? 60
+    : positiveInteger(req.body.extra_minutes);
+  if (!extraMinutes) {
+    return res.status(400).json({ error: 'Extension minutes must be a positive whole number.' });
+  }
   if (extraMinutes > MAX_EXTEND_MINUTES) {
     return res.status(400).json({ error: `Cannot extend by more than ${MAX_EXTEND_MINUTES} minutes at once.` });
   }

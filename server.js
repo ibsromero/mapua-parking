@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const pgSession = require('connect-pg-simple')(session);
 const pool = require('./db/pool');
 const { requireCsrf } = require('./middleware/csrf');
+const { normalizeRequestBody } = require('./middleware/validation');
 
 const authRoutes = require('./routes/auth');
 const reservationRoutes = require('./routes/reservations');
@@ -55,6 +56,7 @@ app.use(
 
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true, limit: '100kb' }));
+app.use('/api', normalizeRequestBody);
 
 app.use(
   session({
@@ -126,6 +128,12 @@ app.use((err, req, res, next) => {
   }
   if (err.type === 'entity.too.large') {
     return res.status(413).json({ error: 'Request body is too large.' });
+  }
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: 'Uploaded files cannot exceed 5 MB each.' });
+  }
+  if (err.code === 'LIMIT_FILE_COUNT' || err.code === 'LIMIT_FIELD_COUNT') {
+    return res.status(400).json({ error: 'Too many fields or files were submitted.' });
   }
   if (err.message && err.message.includes('Only PDF, JPG, PNG')) {
     return res.status(400).json({ error: err.message });

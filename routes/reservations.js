@@ -159,6 +159,20 @@ router.post('/', requireLogin, async (req, res) => {
       return res.status(409).json({ error: 'This slot is under maintenance.' });
     }
 
+    // Users cannot hold overlapping reservations for the same date/time window,
+    // even when they try to book the same time with a different vehicle. A
+    // different vehicle is only allowed when it does not overlap in time.
+    const userConflict = await client.query(
+      `SELECT id FROM reservations
+       WHERE user_id = $1 AND status = 'ongoing' AND reservation_date = $2
+         AND start_time < $4 AND end_time > $3`,
+      [req.session.user.id, reservation_date, normalizedStart, normalizedEnd]
+    );
+    if (userConflict.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'You already have an overlapping reservation for this date and time. Please choose a different time or vehicle.' });
+    }
+
     // Availability is a real overlap check against that specific date/time,
     // not a single global flag -- a booking for one day must not block the
     // same slot on every other day forever.

@@ -40,13 +40,19 @@ router.post('/register', registerLimiter, async (req, res) => {
   const course_year = clean(req.body.course_year, 100);
   const password = typeof req.body.password === 'string' ? req.body.password : '';
 
-  if (!id_number || !ID_RE.test(id_number)) {
+  if (!id_number) {
+    return res.status(400).json({ error: 'ID number is required.' });
+  }
+  if (!ID_RE.test(id_number)) {
     return res.status(400).json({ error: 'ID number must be 4-20 letters, numbers, or dashes.' });
   }
   if (!full_name) return res.status(400).json({ error: 'Full name is required.' });
-  if (email && !EMAIL_RE.test(email)) return res.status(400).json({ error: 'Invalid email address.' });
+  if (email && !EMAIL_RE.test(email)) return res.status(400).json({ error: 'Email address is invalid.' });
   if (!APPLICANT_TYPES.includes(applicant_type)) {
-    return res.status(400).json({ error: 'Invalid applicant type.' });
+    return res.status(400).json({ error: 'Applicant type is invalid.' });
+  }
+  if (!password) {
+    return res.status(400).json({ error: 'Password is required.' });
   }
   if (password.length < 8 || password.length > 200) {
     return res.status(400).json({ error: 'Password must be at least 8 characters.' });
@@ -55,8 +61,7 @@ router.post('/register', registerLimiter, async (req, res) => {
   try {
     const existing = await pool.query('SELECT id FROM users WHERE id_number = $1', [id_number]);
     if (existing.rows[0]) {
-      // Deliberately generic - don't confirm/deny which ID numbers are registered.
-      return res.status(400).json({ error: 'Unable to register with the details provided.' });
+      return res.status(409).json({ error: 'An account with this ID number already exists.' });
     }
 
     const password_hash = await bcrypt.hash(password, 12);
@@ -82,31 +87,29 @@ router.post('/register', registerLimiter, async (req, res) => {
 router.post('/login', async (req, res) => {
   const { id_number, password } = req.body;
 
-  // Server-side validation - never trust the client. Allowlist-style format
-  // check on id_number; length cap on password to avoid oversized payloads
-  // being hashed/compared.
-  if (
-    typeof id_number !== 'string' ||
-    typeof password !== 'string' ||
-    !/^[A-Za-z0-9-]{4,20}$/.test(id_number) ||
-    password.length < 1 ||
-    password.length > 200
-  ) {
-    // Same generic message as a wrong password - don't reveal which part was invalid.
-    return res.status(401).json({ error: 'Invalid ID number or password.' });
+  if (typeof id_number !== 'string' || !id_number.trim()) {
+    return res.status(400).json({ error: 'ID number is required.' });
+  }
+  if (!/^[A-Za-z0-9-]{4,20}$/.test(id_number.trim())) {
+    return res.status(400).json({ error: 'ID number must be 4-20 letters, numbers, or dashes.' });
+  }
+  if (typeof password !== 'string' || !password.trim()) {
+    return res.status(400).json({ error: 'Password is required.' });
+  }
+  if (password.length > 200) {
+    return res.status(400).json({ error: 'Password is too long.' });
   }
 
   try {
-    const { rows } = await pool.query('SELECT * FROM users WHERE id_number = $1', [id_number]);
+    const { rows } = await pool.query('SELECT * FROM users WHERE id_number = $1', [id_number.trim()]);
     const user = rows[0];
 
-    // Always run bcrypt.compare, even when no user was found, using a dummy
-    // hash. This keeps response timing consistent so an attacker can't use
-    // timing differences to enumerate valid ID numbers.
-    const hashToCompare = user ? user.password_hash : '$2a$10$TH4ATeytiSyf9irOfL8uFeALg9mcuo1Urgd5NNRfnCNhxaYVSl.DG';
-    const match = await bcrypt.compare(password, hashToCompare);
+    if (!user) {
+      return res.status(401).json({ error: 'No account was found for that ID number.' });
+    }
 
-    if (!user || !match) return res.status(401).json({ error: 'Invalid ID number or password.' });
+    const match = await bcrypt.compare(password, user.password_hash);
+    if (!match) return res.status(401).json({ error: 'Password is incorrect.' });
 
     // Regenerate the session on login to prevent session fixation attacks.
     req.session.regenerate((err) => {

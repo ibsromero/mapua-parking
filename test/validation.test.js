@@ -13,6 +13,14 @@ test('validName rejects digits and invalid separators', () => {
   assert.equal(validName('12345'), false);
   assert.equal(validName('John -- Doe'), false);
   assert.equal(validName('J'), false);
+  assert.equal(validName('Alex_Lee'), false);
+  assert.equal(validName('Maria 2nd'), false);
+});
+
+test('validName accepts Unicode letters and rejects empty or oversized input', () => {
+  assert.equal(validName('Élodie Dela Cruz'), true);
+  assert.equal(validName('   '), false);
+  assert.equal(validName('A'.repeat(151)), false);
 });
 
 test('positiveInteger rejects partial parses', () => {

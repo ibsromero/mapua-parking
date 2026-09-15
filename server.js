@@ -121,6 +121,12 @@ app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));
 // Central error handler - never leak stack traces or internal details to the client.
 app.use((err, req, res, next) => {
   console.error(err); // full detail server-side only
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    return res.status(400).json({ error: 'Request body contains invalid JSON.' });
+  }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: 'Request body is too large.' });
+  }
   if (err.message && err.message.includes('Only PDF, JPG, PNG')) {
     return res.status(400).json({ error: err.message });
   }

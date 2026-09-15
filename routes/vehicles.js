@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../db/pool');
 const { requireLogin } = require('../middleware/auth');
+const { cleanString, validName } = require('../middleware/validation');
 
 const router = express.Router();
 
@@ -57,6 +58,10 @@ router.post('/', requireLogin, async (req, res) => {
   if (relation_to_applicant && !RELATIONS.includes(relation_to_applicant)) {
     return res.status(400).json({ error: 'Invalid relation to applicant.' });
   }
+  const ownerName = cleanString(req.body.owner_name, 150);
+  if (ownerName && !validName(ownerName)) {
+    return res.status(400).json({ error: 'Owner name may contain letters, spaces, hyphens, apostrophes, and periods only.' });
+  }
 
   try {
     const existing = await pool.query(
@@ -80,7 +85,7 @@ router.post('/', requireLogin, async (req, res) => {
         clean(req.body.body_type),
         clean(req.body.color),
         clean(req.body.trim),
-        clean(req.body.owner_name),
+        ownerName,
         clean(req.body.owner_address),
         relation_to_applicant
       ]

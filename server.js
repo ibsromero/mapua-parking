@@ -24,6 +24,15 @@ if (!process.env.SESSION_SECRET) {
   process.exit(1);
 }
 
+(async () => {
+  try {
+    await pool.query('SELECT 1');
+  } catch (err) {
+    console.error('❌ Database connection check failed at startup:', err.message);
+    process.exit(1);
+  }
+})();
+
 // Render (and most PaaS) sit behind a reverse proxy - needed for secure
 // cookies and correct client IPs (used by the rate limiter) to work.
 app.set('trust proxy', 1);
@@ -95,10 +104,16 @@ app.use('/api/vehicles', vehicleRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/support', supportRoutes);
-// reservations.js also exposes /api/lots/* - mount it there too
-app.use('/api', reservationRoutes);
 
-app.get('/health', (req, res) => res.json({ ok: true }));
+app.get('/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ ok: true, db: 'connected' });
+  } catch (err) {
+    console.error('Health check failed:', err.message);
+    res.status(503).json({ ok: false, db: 'disconnected' });
+  }
+});
 
 // 404 for unknown API routes (keep JSON, don't leak stack/HTML)
 app.use('/api', (req, res) => res.status(404).json({ error: 'Not found.' }));

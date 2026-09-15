@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const pool = require('../db/pool');
 const { requireAdmin, requireGuardOrAdmin } = require('../middleware/auth');
+const { cleanString, positiveInteger, validName } = require('../middleware/validation');
 const {
   sweepExpiredReservations,
   arrivalStatus,
@@ -65,6 +66,8 @@ router.get('/overview', requireAdmin, async (req, res) => {
 
 // GET /api/admin/slots/:lotId -> today's live slot map for facility management.
 router.get('/slots/:lotId', requireAdmin, async (req, res) => {
+  const lotId = positiveInteger(req.params.lotId);
+  if (!lotId) return res.status(400).json({ error: 'Invalid parking lot ID.' });
   try {
     await sweepExpiredReservations(pool);
     const { rows } = await pool.query(
@@ -77,7 +80,7 @@ router.get('/slots/:lotId', requireAdmin, async (req, res) => {
        LEFT JOIN vehicles v ON v.id = r.vehicle_id
        WHERE s.lot_id = $1
        ORDER BY s.row_label, s.slot_number`,
-      [req.params.lotId, todayStr()]
+      [lotId, todayStr()]
     );
     const slots = rows.map((r) => {
       let status = 'available';
@@ -132,13 +135,15 @@ router.get('/today-reservations', requireGuardOrAdmin, async (req, res) => {
 // POST /api/admin/slots/:slotId/status  { status: 'available' | 'maintenance' }
 router.post('/slots/:slotId/status', requireAdmin, async (req, res) => {
   const { status } = req.body;
+  const slotId = positiveInteger(req.params.slotId);
   const valid = ['available', 'maintenance'];
+  if (!slotId) return res.status(400).json({ error: 'Invalid slot ID.' });
   if (!valid.includes(status)) return res.status(400).json({ error: 'Invalid status.' });
 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
-    const slotRes = await client.query('SELECT * FROM parking_slots WHERE id = $1 FOR UPDATE', [req.params.slotId]);
+    const slotRes = await client.query('SELECT * FROM parking_slots WHERE id = $1 FOR UPDATE', [slotId]);
     if (!slotRes.rows[0]) {
       await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Slot not found.' });
@@ -150,13 +155,13 @@ router.post('/slots/:slotId/status', requireAdmin, async (req, res) => {
         `UPDATE reservations SET status = 'cancelled'
          WHERE slot_id = $1 AND status = 'ongoing'
          RETURNING id`,
-        [req.params.slotId]
+        [slotId]
       );
       cancelledReservation = activeRes.rowCount > 0;
     } else if (status === 'available') {
       const activeRes = await client.query(
         `SELECT id FROM reservations WHERE slot_id = $1 AND status = 'ongoing' AND reservation_date = $2 AND checked_in_at IS NULL`,
-        [req.params.slotId, todayStr()]
+        [slotId, todayStr()]
       );
       if (activeRes.rows[0]) {
         await client.query('ROLLBACK');
@@ -166,7 +171,7 @@ router.post('/slots/:slotId/status', requireAdmin, async (req, res) => {
 
     const updated = await client.query(`UPDATE parking_slots SET status = $1 WHERE id = $2 RETURNING *`, [
       status,
-      req.params.slotId
+      slotId
     ]);
     await client.query('COMMIT');
     res.json({ slot: updated.rows[0], cancelled_reservation: cancelledReservation });
@@ -184,6 +189,8 @@ router.post('/slots/:slotId/status', requireAdmin, async (req, res) => {
 // time (early/on_time/late) so whoever's at the gate can note it without
 // extra hardware.
 router.post('/slots/:slotId/entry', requireGuardOrAdmin, async (req, res) => {
+  const slotId = positiveInteger(req.params.slotId);
+  if (!slotId) return res.status(400).json({ error: 'Invalid slot ID.' });
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -192,7 +199,7 @@ router.post('/slots/:slotId/entry', requireGuardOrAdmin, async (req, res) => {
        LEFT JOIN vehicles v ON v.id = r.vehicle_id
        WHERE r.slot_id = $1 AND r.status = 'ongoing' AND r.reservation_date = $2 AND r.checked_in_at IS NULL
        FOR UPDATE OF r LIMIT 1`,
-      [req.params.slotId, todayStr()]
+      [slotId, todayStr()]
     );
     const reservation = resvRes.rows[0];
     if (!reservation) {
@@ -225,6 +232,8 @@ router.post('/slots/:slotId/entry', requireGuardOrAdmin, async (req, res) => {
 // POST /api/admin/slots/:slotId/exit - gate check-out. Returns whether the
 // vehicle left before its reserved end time.
 router.post('/slots/:slotId/exit', requireGuardOrAdmin, async (req, res) => {
+  const slotId = positiveInteger(req.params.slotId);
+  if (!slotId) return res.status(400).json({ error: 'Invalid slot ID.' });
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -233,7 +242,7 @@ router.post('/slots/:slotId/exit', requireGuardOrAdmin, async (req, res) => {
        LEFT JOIN vehicles v ON v.id = r.vehicle_id
        WHERE r.slot_id = $1 AND r.status = 'ongoing' AND r.reservation_date = $2 AND r.checked_in_at IS NOT NULL
        FOR UPDATE OF r LIMIT 1`,
-      [req.params.slotId, todayStr()]
+      [slotId, todayStr()]
     );
     const reservation = resvRes.rows[0];
     if (!reservation) {
@@ -282,10 +291,13 @@ router.get('/guards', requireAdmin, async (req, res) => {
 // Guards don't self-register through the public sign-up page -- only an
 // admin can create one, same reasoning as "only actual Mapuans get accounts."
 router.post('/guards', requireAdmin, async (req, res) => {
-  const full_name = typeof req.body.full_name === 'string' ? req.body.full_name.trim().slice(0, 150) : '';
+  const full_name = cleanString(req.body.full_name, 150);
   const password = typeof req.body.password === 'string' ? req.body.password : '';
 
   if (!full_name) return res.status(400).json({ error: 'Full name is required.' });
+  if (!validName(full_name)) {
+    return res.status(400).json({ error: 'Full name may contain letters, spaces, hyphens, apostrophes, and periods only.' });
+  }
   if (password.length < 8 || password.length > 200) {
     return res.status(400).json({ error: 'Password must be at least 8 characters.' });
   }

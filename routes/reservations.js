@@ -9,6 +9,7 @@ const {
   phtTimeStr,
   GRACE_PERIOD_MINUTES
 } = require('../db/reservationHelpers');
+const { positiveInteger } = require('../middleware/validation');
 
 const router = express.Router();
 
@@ -74,6 +75,8 @@ router.get('/lots', requireLogin, async (req, res) => {
 // only shown "reserved" if a booking actually overlaps the requested window,
 // not forever once anyone has ever booked it for any date.
 router.get('/lots/:lotId/slots', requireLogin, async (req, res) => {
+  const lotId = positiveInteger(req.params.lotId);
+  if (!lotId) return res.status(400).json({ error: 'Invalid parking lot ID.' });
   const date = validDate(req.query.date) ? req.query.date : todayStr();
   const start = normalizeTime(req.query.start) || '00:00:00';
   const end = normalizeTime(req.query.end) || '23:59:00';
@@ -92,7 +95,7 @@ router.get('/lots/:lotId/slots', requireLogin, async (req, res) => {
         END AS status
        FROM parking_slots s WHERE s.lot_id = $1
        ORDER BY s.row_label, s.slot_number`,
-      [req.params.lotId, date, start, end]
+      [lotId, date, start, end]
     );
     res.json({ slots: rows });
   } catch (err) {
@@ -104,7 +107,7 @@ router.get('/lots/:lotId/slots', requireLogin, async (req, res) => {
 // POST /api/reservations  { slot_id, vehicle_id, reservation_date, start_time, end_time }
 router.post('/', requireLogin, async (req, res) => {
   const { vehicle_id, reservation_date, start_time, end_time } = req.body;
-  const slot_id = Number.parseInt(req.body.slot_id, 10);
+  const slot_id = positiveInteger(req.body.slot_id);
 
   if (
     !Number.isInteger(slot_id) ||
@@ -127,8 +130,8 @@ router.post('/', requireLogin, async (req, res) => {
   // sticker — booking a slot with no vehicle attached doesn't make sense,
   // and the whole point of the sticker requirement is enforced here rather
   // than just mentioned in a banner.
-  const vId = Number.parseInt(vehicle_id, 10);
-  if (!Number.isInteger(vId)) {
+  const vId = positiveInteger(vehicle_id);
+  if (!vId) {
     return res.status(400).json({ error: 'Select a vehicle to reserve this slot for.' });
   }
   const owned = await pool.query('SELECT id FROM vehicles WHERE id = $1 AND user_id = $2', [
@@ -263,8 +266,10 @@ router.get('/history', requireLogin, async (req, res) => {
 // POST /api/reservations/:id/extend  { extra_minutes }  - default 60 if omitted
 const MAX_EXTEND_MINUTES = 180; // cap a single extension request (3 hours) to prevent abuse
 router.post('/:id/extend', requireLogin, async (req, res) => {
-  let extraMinutes = Number.parseInt(req.body.extra_minutes, 10);
-  if (!Number.isInteger(extraMinutes) || extraMinutes <= 0) extraMinutes = 60;
+  const reservationId = positiveInteger(req.params.id);
+  if (!reservationId) return res.status(400).json({ error: 'Invalid reservation ID.' });
+  let extraMinutes = positiveInteger(req.body.extra_minutes);
+  if (!extraMinutes) extraMinutes = 60;
   if (extraMinutes > MAX_EXTEND_MINUTES) {
     return res.status(400).json({ error: `Cannot extend by more than ${MAX_EXTEND_MINUTES} minutes at once.` });
   }
@@ -275,7 +280,7 @@ router.post('/:id/extend', requireLogin, async (req, res) => {
 
     const { rows } = await client.query(
       `SELECT * FROM reservations WHERE id = $1 AND user_id = $2 FOR UPDATE`,
-      [req.params.id, req.session.user.id]
+      [reservationId, req.session.user.id]
     );
     const reservation = rows[0];
     if (!reservation) {
@@ -330,12 +335,14 @@ router.post('/:id/extend', requireLogin, async (req, res) => {
 
 // POST /api/reservations/:id/cancel
 router.post('/:id/cancel', requireLogin, async (req, res) => {
+  const reservationId = positiveInteger(req.params.id);
+  if (!reservationId) return res.status(400).json({ error: 'Invalid reservation ID.' });
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
     const { rows } = await client.query(
       `SELECT * FROM reservations WHERE id = $1 AND user_id = $2 FOR UPDATE`,
-      [req.params.id, req.session.user.id]
+      [reservationId, req.session.user.id]
     );
     const reservation = rows[0];
     if (!reservation) {

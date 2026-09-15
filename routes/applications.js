@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const QRCode = require('qrcode');
 const pool = require('../db/pool');
 const { requireLogin, requireAdmin } = require('../middleware/auth');
+const { positiveInteger } = require('../middleware/validation');
 
 const router = express.Router();
 
@@ -43,7 +44,7 @@ function mimeFor(file) {
 
 // POST /api/applications  (multipart form: vehicle_id + files + rules_acknowledged)
 router.post('/', requireLogin, uploadFields, async (req, res) => {
-  const vehicleId = Number.parseInt(req.body.vehicle_id, 10);
+  const vehicleId = positiveInteger(req.body.vehicle_id);
   const files = req.files || {};
   const orCr = files.or_cr_file?.[0];
   const license = files.drivers_license_file?.[0];
@@ -162,7 +163,7 @@ router.get('/', requireAdmin, async (req, res) => {
 // POST /api/applications/:id/decision  { decision: 'approved' | 'rejected', rejection_reason? }
 router.post('/:id/decision', requireAdmin, async (req, res) => {
   const { decision } = req.body;
-  const applicationId = Number.parseInt(req.params.id, 10);
+  const applicationId = positiveInteger(req.params.id);
 
   if (!['approved', 'rejected'].includes(decision)) {
     return res.status(400).json({ error: 'Decision must be approved or rejected.' });
@@ -204,11 +205,13 @@ router.post('/:id/decision', requireAdmin, async (req, res) => {
 
 // GET /api/applications/:id/qr - render the owner's issued permit as a QR image.
 router.get('/:id/qr', requireLogin, async (req, res) => {
+  const applicationId = positiveInteger(req.params.id);
+  if (!applicationId) return res.status(400).json({ error: 'Invalid application ID.' });
   try {
     const { rows } = await pool.query(
       `SELECT user_id, permit_token FROM sticker_applications
        WHERE id = $1 AND status = 'approved'`,
-      [req.params.id]
+      [applicationId]
     );
     const application = rows[0];
     if (!application) return res.status(404).json({ error: 'Approved permit not found.' });
@@ -259,6 +262,8 @@ const DOC_FIELDS = {
   university_id_file: ['university_id_data', 'university_id_mimetype', 'university_id_file']
 };
 router.get('/:id/documents/:field', requireLogin, async (req, res) => {
+  const applicationId = positiveInteger(req.params.id);
+  if (!applicationId) return res.status(400).json({ error: 'Invalid application ID.' });
   const columns = DOC_FIELDS[req.params.field];
   if (!columns) return res.status(400).json({ error: 'Invalid document field.' });
   const [dataCol, mimeCol, nameCol] = columns;
@@ -267,7 +272,7 @@ router.get('/:id/documents/:field', requireLogin, async (req, res) => {
     const { rows } = await pool.query(
       `SELECT user_id, ${dataCol} AS data, ${mimeCol} AS mimetype, ${nameCol} AS filename
        FROM sticker_applications WHERE id = $1`,
-      [req.params.id]
+      [applicationId]
     );
     const application = rows[0];
     if (!application) return res.status(404).json({ error: 'Application not found.' });

@@ -1,6 +1,7 @@
 const express = require('express');
 const pool = require('../db/pool');
 const { requireLogin, requireAdmin } = require('../middleware/auth');
+const { positiveInteger } = require('../middleware/validation');
 
 const router = express.Router();
 const CATEGORIES = ['Sticker Issue', 'Booking Error', 'Payment Issue', 'Other'];
@@ -46,6 +47,8 @@ router.get('/mine', requireLogin, async (req, res) => {
 // GET /api/support  (admin, optional ?status=)
 router.get('/', requireAdmin, async (req, res) => {
   const { status } = req.query;
+  const validStatuses = ['new', 'in_progress', 'waiting_for_user', 'resolved'];
+  if (status && !validStatuses.includes(status)) return res.status(400).json({ error: 'Invalid status filter.' });
   try {
     const params = [];
     let where = '';
@@ -69,13 +72,15 @@ router.get('/', requireAdmin, async (req, res) => {
 // POST /api/support/:id/status  { status }
 router.post('/:id/status', requireAdmin, async (req, res) => {
   const { status } = req.body;
+  const ticketId = positiveInteger(req.params.id);
   const valid = ['new', 'in_progress', 'waiting_for_user', 'resolved'];
+  if (!ticketId) return res.status(400).json({ error: 'Invalid ticket ID.' });
   if (!valid.includes(status)) return res.status(400).json({ error: 'Invalid status.' });
   try {
     const resolvedAt = status === 'resolved' ? 'NOW()' : 'NULL';
     const { rows } = await pool.query(
       `UPDATE support_tickets SET status = $1, resolved_at = ${resolvedAt} WHERE id = $2 RETURNING *`,
-      [status, req.params.id]
+      [status, ticketId]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Ticket not found.' });
     res.json({ ticket: rows[0] });

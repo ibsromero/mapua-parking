@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const pool = require('../db/pool');
 const { csrfToken } = require('../middleware/csrf');
+const { cleanString, validName } = require('../middleware/validation');
 
 const router = express.Router();
 
@@ -32,7 +33,7 @@ router.get('/csrf', csrfToken);
 // a login (id_number + password) for a new applicant.
 router.post('/register', registerLimiter, async (req, res) => {
   const id_number = clean(req.body.id_number, 20);
-  const full_name = clean(req.body.full_name, 150);
+  const full_name = cleanString(req.body.full_name, 150);
   const email = clean(req.body.email, 150);
   const contact_no = clean(req.body.contact_no, 30);
   const address = clean(req.body.address, 200);
@@ -47,6 +48,9 @@ router.post('/register', registerLimiter, async (req, res) => {
     return res.status(400).json({ error: 'ID number must be 4-20 letters, numbers, or dashes.' });
   }
   if (!full_name) return res.status(400).json({ error: 'Full name is required.' });
+  if (!validName(full_name)) {
+    return res.status(400).json({ error: 'Full name may contain letters, spaces, hyphens, apostrophes, and periods only.' });
+  }
   if (email && !EMAIL_RE.test(email)) return res.status(400).json({ error: 'Email address is invalid.' });
   if (!APPLICANT_TYPES.includes(applicant_type)) {
     return res.status(400).json({ error: 'Applicant type is invalid.' });

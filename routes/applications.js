@@ -162,8 +162,13 @@ router.get('/', requireAdmin, async (req, res) => {
 // POST /api/applications/:id/decision  { decision: 'approved' | 'rejected', rejection_reason? }
 router.post('/:id/decision', requireAdmin, async (req, res) => {
   const { decision } = req.body;
+  const applicationId = Number.parseInt(req.params.id, 10);
+
   if (!['approved', 'rejected'].includes(decision)) {
     return res.status(400).json({ error: 'Decision must be approved or rejected.' });
+  }
+  if (!Number.isInteger(applicationId) || applicationId <= 0) {
+    return res.status(400).json({ error: 'Invalid application ID.' });
   }
   // Reason is required on rejection so the student knows what to fix -- an
   // application can't just vanish into "rejected" with no explanation.
@@ -177,15 +182,17 @@ router.post('/:id/decision', requireAdmin, async (req, res) => {
   try {
     const permitNumber = decision === 'approved' ? `MP-${new Date().getFullYear()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}` : null;
     const permitToken = decision === 'approved' ? crypto.randomBytes(24).toString('hex') : null;
+    const isApproved = decision === 'approved';
     const { rows } = await pool.query(
       `UPDATE sticker_applications
        SET status = $1, reviewed_at = NOW(), reviewed_by = $2, rejection_reason = $3,
-           permit_number = $5, permit_token = $6, permit_issued_at = CASE WHEN $1 = 'approved' THEN NOW() ELSE NULL END
+           permit_number = $5, permit_token = $6,
+           permit_issued_at = CASE WHEN $7 THEN NOW() ELSE NULL END
        WHERE id = $4 AND status = 'pending'
        RETURNING id, user_id, vehicle_id, status, or_cr_file, drivers_license_file, university_id_file,
                  rules_acknowledged, rejection_reason, submitted_at, reviewed_at, reviewed_by,
                  permit_number, permit_token, permit_issued_at`,
-      [decision, req.session.user.id, rejectionReason, req.params.id, permitNumber, permitToken]
+      [decision, req.session.user.id, rejectionReason, applicationId, permitNumber, permitToken, isApproved]
     );
     if (!rows[0]) return res.status(409).json({ error: 'Only pending applications can be reviewed.' });
     res.json({ application: rows[0] });

@@ -28,7 +28,7 @@ document.getElementById('ticketForm').addEventListener('submit', async (e) => {
       })
     });
     document.getElementById('description').value = '';
-    loadTickets();
+    await loadTickets();
   } catch (err) {
     errEl.textContent = err.message;
     errEl.style.display = 'block';
@@ -38,5 +38,8 @@ document.getElementById('ticketForm').addEventListener('submit', async (e) => {
 (async function () {
   const user = await requireAuth('user');
   if (!user) return;
-  loadTickets();
+  loadTickets().catch((error) => alert(error.message));
+  setInterval(() => {
+    if (document.visibilityState === 'visible') loadTickets().catch(() => {});
+  }, 15000);
 })();

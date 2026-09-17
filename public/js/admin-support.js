@@ -23,7 +23,7 @@ async function loadTickets() {
 async function advance(id, status) {
   try {
     await api(`/api/support/${id}/status`, { method: 'POST', body: JSON.stringify({ status }) });
-    loadTickets();
+    await loadTickets();
   } catch (e) {
     alert(e.message);
   }
@@ -43,5 +43,8 @@ if (ticketTable) {
 (async function () {
   const user = await requireAuth('admin');
   if (!user) return;
-  loadTickets();
+  loadTickets().catch((error) => alert(error.message));
+  setInterval(() => {
+    if (document.visibilityState === 'visible') loadTickets().catch(() => {});
+  }, 15000);
 })();

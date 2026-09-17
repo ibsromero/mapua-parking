@@ -143,7 +143,7 @@ document.getElementById('rows').addEventListener('click', async (e) => {
     } else {
       alert(`Exit logged. Departure: ${result.departure_status === 'early' ? 'Left early' : 'On time'}.`);
     }
-    load();
+    await load();
   } catch (err) {
     alert(err.message);
   }

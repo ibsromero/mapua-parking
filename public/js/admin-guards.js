@@ -28,7 +28,7 @@ document.getElementById('addGuardForm').addEventListener('submit', async (e) => 
       })
     });
     document.getElementById('addGuardForm').reset();
-    loadGuards();
+    await loadGuards();
   } catch (err) {
     errEl.textContent = err.message;
     errEl.style.display = 'block';
@@ -40,5 +40,8 @@ document.getElementById('addGuardForm').addEventListener('submit', async (e) => 
 (async function () {
   const user = await requireAuth('admin');
   if (!user) return;
-  loadGuards();
+  loadGuards().catch((error) => alert(error.message));
+  setInterval(() => {
+    if (document.visibilityState === 'visible') loadGuards().catch(() => {});
+  }, 15000);
 })();

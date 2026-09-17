@@ -143,7 +143,7 @@ document.getElementById('bookForm').addEventListener('submit', async (e) => {
     errEl.textContent = err.message;
     errEl.style.display = 'block';
     btn.disabled = false;
-    if (currentLotId) loadSlots(currentLotId); // refresh in case slot was taken
+    if (currentLotId) loadSlots(currentLotId).catch(showLoadError); // refresh in case slot was taken
   }
 });
 

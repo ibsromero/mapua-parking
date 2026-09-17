@@ -82,5 +82,13 @@ document.getElementById('filterTabs').addEventListener('click', (e) => {
 (async function () {
   const user = await requireAuth('admin');
   if (!user) return;
-  loadApps('');
+  loadApps('').catch((error) => {
+    document.getElementById('appRows').innerHTML = `<tr><td colspan="8" class="error-text">${esc(error.message)}</td></tr>`;
+  });
+  setInterval(() => {
+    if (document.visibilityState === 'visible') {
+      const active = document.querySelector('#filterTabs .btn.active')?.dataset.status || '';
+      loadApps(active).catch(() => {});
+    }
+  }, 15000);
 })();

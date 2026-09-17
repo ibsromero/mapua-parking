@@ -120,7 +120,8 @@ router.post('/', requireLogin, async (req, res) => {
   }
   const normalizedStart = normalizeTime(start_time);
   const normalizedEnd = normalizeTime(end_time);
-  if (new Date(`${reservation_date}T${normalizedStart}${'+08:00'}`) < new Date(`${phtTodayStr()}T00:00:00+08:00`)) {
+  const today = phtTodayStr();
+  if (reservation_date < today || (reservation_date === today && normalizedStart <= phtTimeStr())) {
     return res.status(400).json({ error: 'Reservation date cannot be in the past.' });
   }
   if (normalizedStart >= normalizedEnd) {
@@ -352,6 +353,10 @@ router.post('/:id/cancel', requireLogin, async (req, res) => {
     if (!reservation) {
       await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Reservation not found.' });
+    }
+    if (reservation.status !== 'ongoing') {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Only an ongoing reservation can be cancelled.' });
     }
     await client.query(`UPDATE reservations SET status = 'cancelled' WHERE id = $1`, [reservation.id]);
     await client.query('COMMIT');

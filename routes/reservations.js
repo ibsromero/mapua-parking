@@ -155,6 +155,17 @@ router.post('/', requireLogin, async (req, res) => {
     await client.query('BEGIN');
     await sweepExpiredReservations(client);
 
+    // Serialize reservations from the same account so concurrent requests
+    // cannot both pass the per-user overlap check on different slots.
+    const userRes = await client.query(
+      'SELECT id FROM users WHERE id = $1 FOR UPDATE',
+      [req.session.user.id]
+    );
+    if (!userRes.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(401).json({ error: 'Your account is no longer available.' });
+    }
+
     // Lock the slot row so two overlapping booking attempts for the same
     // slot serialize through here rather than racing each other.
     const slotRes = await client.query('SELECT status FROM parking_slots WHERE id = $1 FOR UPDATE', [slot_id]);

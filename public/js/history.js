@@ -4,9 +4,7 @@ function badgeClass(status) {
 function arrivalLabel(status) {
   return { early: 'Arrived early', on_time: 'Arrived on time', late: 'Arrived late' }[status] || '';
 }
-(async function () {
-  const user = await requireAuth('user');
-  if (!user) return;
+async function loadHistory() {
   try {
     const { reservations } = await api('/api/reservations/history');
     const grid = document.getElementById('historyGrid');
@@ -30,4 +28,13 @@ function arrivalLabel(status) {
   } catch (e) {
     document.getElementById('historyGrid').innerHTML = `<p class="error-text">${esc(e.message)}</p>`;
   }
+}
+
+(async function () {
+  const user = await requireAuth('user');
+  if (!user) return;
+  await loadHistory();
+  setInterval(() => {
+    if (document.visibilityState === 'visible') loadHistory().catch(() => {});
+  }, 15000);
 })();

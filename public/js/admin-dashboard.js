@@ -23,4 +23,8 @@
     const box = document.getElementById('recentActivity');
     if (box) box.innerHTML = `<p class="error-text">${esc(e.message)}</p>`;
   }
+
+  setInterval(() => {
+    if (document.visibilityState === 'visible') window.location.reload();
+  }, 30000);
 })();

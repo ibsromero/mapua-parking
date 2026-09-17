@@ -4,7 +4,7 @@ let currentSlots = [];
 let selectedSlotId = null;
 
 async function loadLots() {
-  const { lots: l } = await api('/api/lots');
+  const { lots: l } = await api('/api/reservations/lots');
   lots = l;
   const tabs = document.getElementById('lotTabs');
   tabs.innerHTML = lots.map((lot, i) => `<div class="lot-tab ${i === 0 ? 'active' : ''}" data-id="${lot.id}">${esc(lot.name)}</div>`).join('');

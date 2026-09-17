@@ -206,7 +206,7 @@
 
   // Occupancy
   try {
-    const { lots } = await api('/api/lots');
+    const { lots } = await api('/api/reservations/lots');
     const box = document.getElementById('occupancy');
     box.innerHTML = lots.map(lot => {
       const total = Number(lot.total), available = Number(lot.available);

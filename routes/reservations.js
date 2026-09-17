@@ -37,7 +37,7 @@ function todayStr() {
   return phtTodayStr();
 }
 
-// GET /api/lots  -> list lots with TODAY's occupancy summary (a slot counts
+// GET /api/reservations/lots  -> list lots with TODAY's occupancy summary (a slot counts
 // as unavailable right now if it's under maintenance or has an ongoing
 // reservation covering the current moment -- not a stored flag that never
 // resets once a booking is made for some other day).
@@ -70,7 +70,7 @@ router.get('/lots', requireLogin, async (req, res) => {
   }
 });
 
-// GET /api/lots/:lotId/slots?date=YYYY-MM-DD&start=HH:MM&end=HH:MM
+// GET /api/reservations/lots/:lotId/slots?date=YYYY-MM-DD&start=HH:MM&end=HH:MM
 // Slot map for a lot, scoped to a specific date/time window -- a slot is
 // only shown "reserved" if a booking actually overlaps the requested window,
 // not forever once anyone has ever booked it for any date.

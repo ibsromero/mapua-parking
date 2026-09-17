@@ -1,6 +1,9 @@
 let lots = [];
 let currentLotId = null;
 let selectedSlotId = null;
+let slotLoadSequence = 0;
+
+const lotsApiPath = '/api/reservations/lots';
 
 function currentWindow() {
   return {
@@ -11,7 +14,7 @@ function currentWindow() {
 }
 
 async function loadLots() {
-  const { lots: l } = await api('/api/lots');
+  const { lots: l } = await api(lotsApiPath);
   lots = l;
   const tabs = document.getElementById('lotTabs');
   tabs.innerHTML = lots.map((lot, i) =>
@@ -21,13 +24,15 @@ async function loadLots() {
     tab.addEventListener('click', () => {
       tabs.querySelectorAll('.lot-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      loadSlots(tab.dataset.id);
+      loadSlots(tab.dataset.id).catch(showLoadError);
     });
   });
-  if (lots[0]) loadSlots(lots[0].id);
+  if (lots[0]) await loadSlots(lots[0].id);
+  else throw new Error('No parking lots are available right now.');
 }
 
 async function loadSlots(lotId) {
+  const requestSequence = ++slotLoadSequence;
   currentLotId = lotId;
   selectedSlotId = null;
   updateSummary();
@@ -35,7 +40,8 @@ async function loadSlots(lotId) {
   grid.innerHTML = '<p class="muted">Loading slots...</p>';
   const { date, start, end } = currentWindow();
   const qs = new URLSearchParams({ date, start, end }).toString();
-  const { slots } = await api(`/api/lots/${lotId}/slots?${qs}`);
+  const { slots } = await api(`${lotsApiPath}/${lotId}/slots?${qs}`);
+  if (requestSequence !== slotLoadSequence) return;
   grid.innerHTML = slots.map(s => {
     const cls = s.status === 'available' ? 'available' : s.status;
     return `<div class="slot ${cls}" data-id="${s.id}" data-number="${esc(s.slot_number)}">${esc(s.slot_number)}</div>`;
@@ -50,12 +56,17 @@ async function loadSlots(lotId) {
   });
 }
 
+function showLoadError(error) {
+  const grid = document.getElementById('slotGrid');
+  grid.innerHTML = `<p class="error-text">${esc(error.message || 'Unable to load parking slots. Please try again.')}</p>`;
+}
+
 // Changing the date or time window changes which slots are actually free,
 // so re-fetch the map (and drop the current selection, since the slot the
 // user had picked may no longer be free -- or a previously-taken one now is).
 ['reservation_date', 'start_time', 'end_time'].forEach(id => {
   document.getElementById(id).addEventListener('change', () => {
-    if (currentLotId) loadSlots(currentLotId);
+    if (currentLotId) loadSlots(currentLotId).catch(showLoadError);
   });
 });
 
@@ -138,10 +149,14 @@ function localDateStr(d = new Date()) {
 }
 
 (async function () {
-  const user = await requireAuth('user');
-  if (!user) return;
-  document.getElementById('reservation_date').min = localDateStr();
-  document.getElementById('reservation_date').value = localDateStr();
-  await loadLots();
-  await loadVehicles();
+  try {
+    const user = await requireAuth('user');
+    if (!user) return;
+    document.getElementById('reservation_date').min = localDateStr();
+    document.getElementById('reservation_date').value = localDateStr();
+    await loadLots();
+    await loadVehicles();
+  } catch (error) {
+    showLoadError(error);
+  }
 })();

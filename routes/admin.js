@@ -76,12 +76,11 @@ router.get('/slots/:lotId', requireAdmin, async (req, res) => {
               v.plate_no, v.make, v.model, v.color, r.start_time, r.end_time, r.reservation_date
        FROM parking_slots s
        LEFT JOIN reservations r ON r.slot_id = s.id AND r.status = 'ongoing' AND r.reservation_date = $2
-         AND r.start_time < $3 AND r.end_time > $3
        LEFT JOIN users u ON u.id = r.user_id
        LEFT JOIN vehicles v ON v.id = r.vehicle_id
        WHERE s.lot_id = $1
        ORDER BY s.row_label, s.slot_number`,
-      [lotId, todayStr(), phtTimeStr()]
+      [lotId, todayStr()]
     );
     const slots = rows.map((r) => {
       let status = 'available';

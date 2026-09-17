@@ -154,5 +154,8 @@ document.getElementById('rows').addEventListener('click', async (e) => {
   if (!user) return;
   document.getElementById('currentGuardName').textContent = user.full_name;
   document.getElementById('currentGuardId').textContent = `Guard ID: ${user.id_number}`;
-  load();
+  load().catch((error) => alert(error.message));
+  setInterval(() => {
+    if (document.visibilityState === 'visible') load().catch(() => {});
+  }, 15000);
 })();

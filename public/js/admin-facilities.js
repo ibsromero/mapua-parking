@@ -13,10 +13,10 @@ async function loadLots() {
       tabs.querySelectorAll('.lot-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       selectedSlotId = null;
-      loadSlots(tab.dataset.id);
+      loadSlots(tab.dataset.id).catch((error) => alert(error.message));
     });
   });
-  if (lots[0]) loadSlots(lots[0].id);
+  if (lots[0]) await loadSlots(lots[0].id);
 }
 
 async function loadSlots(lotId) {
@@ -104,7 +104,7 @@ async function logGate(slotId, action) {
     } else {
       alert(`Exit logged (${result.ticket_number}). ${result.departure_status === 'early' ? 'Vehicle left early.' : 'Departed on schedule.'}`);
     }
-    loadSlots(currentLotId);
+    await loadSlots(currentLotId);
   } catch (e) {
     alert(e.message);
   }
@@ -121,7 +121,7 @@ async function setStatus(slotId, status, currentSlotStatus) {
   }
   try {
     await api(`/api/admin/slots/${slotId}/status`, { method: 'POST', body: JSON.stringify({ status }) });
-    loadSlots(currentLotId);
+    await loadSlots(currentLotId);
   } catch (e) {
     alert(e.message);
   }
@@ -146,5 +146,10 @@ document.getElementById('detailBody').addEventListener('click', (e) => {
 (async function () {
   const user = await requireAuth('admin');
   if (!user) return;
-  loadLots();
+  loadLots().catch((error) => alert(error.message));
+  setInterval(() => {
+    if (currentLotId && document.visibilityState === 'visible') {
+      loadSlots(currentLotId).catch(() => {});
+    }
+  }, 15000);
 })();

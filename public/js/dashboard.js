@@ -227,4 +227,10 @@
   } catch (e) {
     document.getElementById('occupancy').innerHTML = `<p class="error-text">${esc(e.message)}</p>`;
   }
+
+  // Keep the dashboard in sync with gate actions and bookings made in another
+  // browser tab without refreshing while the page is hidden.
+  setInterval(() => {
+    if (document.visibilityState === 'visible') window.location.reload();
+  }, 30000);
 })();

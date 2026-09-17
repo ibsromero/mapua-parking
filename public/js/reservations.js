@@ -31,11 +31,13 @@ async function loadLots() {
   else throw new Error('No parking lots are available right now.');
 }
 
-async function loadSlots(lotId) {
+async function loadSlots(lotId, preserveSelection = false) {
   const requestSequence = ++slotLoadSequence;
   currentLotId = lotId;
-  selectedSlotId = null;
-  updateSummary();
+  if (!preserveSelection) {
+    selectedSlotId = null;
+    updateSummary();
+  }
   const grid = document.getElementById('slotGrid');
   grid.innerHTML = '<p class="muted">Loading slots...</p>';
   const { date, start, end } = currentWindow();
@@ -44,8 +46,16 @@ async function loadSlots(lotId) {
   if (requestSequence !== slotLoadSequence) return;
   grid.innerHTML = slots.map(s => {
     const cls = s.status === 'available' ? 'available' : s.status;
-    return `<div class="slot ${cls}" data-id="${s.id}" data-number="${esc(s.slot_number)}">${esc(s.slot_number)}</div>`;
+    const selected = String(s.id) === String(selectedSlotId) ? ' selected' : '';
+    return `<div class="slot ${cls}${selected}" data-id="${s.id}" data-number="${esc(s.slot_number)}">${esc(s.slot_number)}</div>`;
   }).join('');
+  const selectedSlot = slots.find(s => String(s.id) === String(selectedSlotId));
+  if (!selectedSlot || selectedSlot.status !== 'available') {
+    selectedSlotId = null;
+    updateSummary();
+  } else {
+    updateSummary(selectedSlot.slot_number);
+  }
   grid.querySelectorAll('.slot.available').forEach(el => {
     el.addEventListener('click', () => {
       grid.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
@@ -156,6 +166,11 @@ function localDateStr(d = new Date()) {
     document.getElementById('reservation_date').value = localDateStr();
     await loadLots();
     await loadVehicles();
+    setInterval(() => {
+      if (currentLotId && document.visibilityState === 'visible') {
+        loadSlots(currentLotId, true).catch(showLoadError);
+      }
+    }, 15000);
   } catch (error) {
     showLoadError(error);
   }

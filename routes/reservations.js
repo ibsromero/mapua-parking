@@ -7,6 +7,7 @@ const {
   ticketNumber,
   phtTodayStr,
   phtTimeStr,
+  isReservationStartInPast,
   GRACE_PERIOD_MINUTES
 } = require('../db/reservationHelpers');
 const { positiveInteger } = require('../middleware/validation');
@@ -121,7 +122,7 @@ router.post('/', requireLogin, async (req, res) => {
   const normalizedStart = normalizeTime(start_time);
   const normalizedEnd = normalizeTime(end_time);
   const today = phtTodayStr();
-  if (reservation_date < today || (reservation_date === today && normalizedStart <= phtTimeStr())) {
+  if (isReservationStartInPast(reservation_date, normalizedStart, today, phtTimeStr())) {
     return res.status(400).json({ error: 'Reservation date cannot be in the past.' });
   }
   if (normalizedStart >= normalizedEnd) {

@@ -54,6 +54,10 @@ function phtTimeStr() {
   return `${hour}:${minute}:${second}`;
 }
 
+function isReservationStartInPast(reservationDate, startTime, today = phtTodayStr(), currentTime = phtTimeStr()) {
+  return reservationDate < today || (reservationDate === today && startTime <= currentTime);
+}
+
 async function sweepExpiredReservations(pool) {
   await pool.query(
     `UPDATE reservations
@@ -106,5 +110,6 @@ module.exports = {
   ticketNumber,
   phtTodayStr,
   phtTimeStr,
+  isReservationStartInPast,
   GRACE_PERIOD_MINUTES
 };

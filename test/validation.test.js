@@ -5,6 +5,7 @@ const {
   positiveInteger,
   normalizeRequestBody
 } = require('../middleware/validation');
+const { isReservationStartInPast } = require('../db/reservationHelpers');
 
 test('validName accepts normal names and common separators', () => {
   assert.equal(validName('Maria Dela Cruz'), true);
@@ -50,4 +51,11 @@ test('normalizeRequestBody makes missing bodies safe and rejects non-objects', (
     code: 400,
     payload: { error: 'Request body must be a JSON object.' }
   });
+});
+
+test('isReservationStartInPast handles dates and same-day times consistently', () => {
+  assert.equal(isReservationStartInPast('2026-09-16', '23:00:00', '2026-09-17', '08:00:00'), true);
+  assert.equal(isReservationStartInPast('2026-09-17', '08:00:00', '2026-09-17', '08:00:01'), true);
+  assert.equal(isReservationStartInPast('2026-09-17', '08:01:00', '2026-09-17', '08:00:59'), false);
+  assert.equal(isReservationStartInPast('2026-09-18', '00:00:00', '2026-09-17', '23:59:59'), false);
 });

@@ -65,8 +65,8 @@ async function seed() {
 
     const guardPass = await bcrypt.hash('guard123', 10);
     await client.query(
-      `INSERT INTO users (id_number, full_name, applicant_type, password_hash, role)
-       VALUES ('GUARD-0001', 'Demo Guard', 'non_teaching', $1, 'guard')
+      `INSERT INTO users (id_number, full_name, email, applicant_type, password_hash, role)
+       VALUES ('GUARD-0001', 'Demo Guard', 'guard@mapua.edu.ph', 'non_teaching', $1, 'guard')
        ON CONFLICT (id_number) DO NOTHING`,
       [guardPass]
     );

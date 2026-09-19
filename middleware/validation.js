@@ -17,6 +17,23 @@ function validMapuaEmail(value) {
   return typeof value === 'string' && MAPUA_EMAIL_RE.test(value.trim());
 }
 
+function hasTimeOverlap(startA, endA, startB, endB) {
+  const toMinutes = (time) => {
+    if (typeof time !== 'string' || !/^\d{2}:\d{2}(:\d{2})?$/.test(time)) return null;
+    const [hour, minute, second = '00'] = time.split(':').map(Number);
+    if (hour > 23 || minute > 59 || second > 59) return null;
+    return hour * 60 + minute + second / 60;
+  };
+
+  const aStart = toMinutes(startA);
+  const aEnd = toMinutes(endA);
+  const bStart = toMinutes(startB);
+  const bEnd = toMinutes(endB);
+
+  if (aStart === null || aEnd === null || bStart === null || bEnd === null) return false;
+  return aStart < bEnd && bStart < aEnd;
+}
+
 function positiveInteger(value) {
   if (typeof value === 'number') return Number.isSafeInteger(value) && value > 0 ? value : null;
   if (typeof value !== 'string' || !/^\d+$/.test(value.trim())) return null;
@@ -36,4 +53,4 @@ function normalizeRequestBody(req, res, next) {
   next();
 }
 
-module.exports = { cleanString, validName, validMapuaEmail, positiveInteger, normalizeRequestBody };
+module.exports = { cleanString, validName, validMapuaEmail, hasTimeOverlap, positiveInteger, normalizeRequestBody };

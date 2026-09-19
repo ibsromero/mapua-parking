@@ -157,10 +157,16 @@ document.getElementById('rows').addEventListener('click', async (e) => {
 });
 
 (async function () {
-  const user = await requireAuth('guard');
+  const user = await requireAuth();
   if (!user) return;
+  if (!['guard', 'admin'].includes(user.role)) {
+    window.location.href = homeFor(user.role || 'user');
+    return;
+  }
   document.getElementById('currentGuardName').textContent = user.full_name;
-  document.getElementById('currentGuardId').textContent = `Guard ID: ${user.id_number}`;
+  document.getElementById('currentGuardId').textContent = user.role === 'admin'
+    ? 'Admin access'
+    : `Guard ID: ${user.id_number}`;
   load().catch((error) => alert(error.message));
   setInterval(() => {
     if (document.visibilityState === 'visible') load().catch(() => {});

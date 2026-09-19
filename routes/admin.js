@@ -153,9 +153,9 @@ router.post('/slots/:slotId/status', requireAdmin, async (req, res) => {
     if (status === 'maintenance') {
       const activeRes = await client.query(
         `UPDATE reservations SET status = 'cancelled'
-         WHERE slot_id = $1 AND status = 'ongoing'
+         WHERE slot_id = $1 AND status = 'ongoing' AND reservation_date = $2
          RETURNING id`,
-        [slotId]
+        [slotId, todayStr()]
       );
       cancelledReservation = activeRes.rowCount > 0;
     } else if (status === 'available') {
@@ -194,12 +194,14 @@ router.post('/slots/:slotId/entry', requireGuardOrAdmin, async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    const nowTime = phtTimeStr();
     const resvRes = await client.query(
       `SELECT r.id, r.reservation_date, r.start_time, v.plate_no FROM reservations r
        LEFT JOIN vehicles v ON v.id = r.vehicle_id
-       WHERE r.slot_id = $1 AND r.status = 'ongoing' AND r.reservation_date = $2 AND r.checked_in_at IS NULL
+       WHERE r.slot_id = $1 AND r.status = 'ongoing' AND r.reservation_date = $2
+         AND r.checked_in_at IS NULL AND r.start_time <= $3 AND r.end_time > $3
        FOR UPDATE OF r LIMIT 1`,
-      [slotId, todayStr()]
+      [slotId, todayStr(), nowTime]
     );
     const reservation = resvRes.rows[0];
     if (!reservation) {
@@ -237,12 +239,14 @@ router.post('/slots/:slotId/exit', requireGuardOrAdmin, async (req, res) => {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    const nowTime = phtTimeStr();
     const resvRes = await client.query(
       `SELECT r.id, r.reservation_date, r.end_time, v.plate_no FROM reservations r
        LEFT JOIN vehicles v ON v.id = r.vehicle_id
-       WHERE r.slot_id = $1 AND r.status = 'ongoing' AND r.reservation_date = $2 AND r.checked_in_at IS NOT NULL
+       WHERE r.slot_id = $1 AND r.status = 'ongoing' AND r.reservation_date = $2
+         AND r.checked_in_at IS NOT NULL AND r.start_time <= $3 AND r.end_time > $3
        FOR UPDATE OF r LIMIT 1`,
-      [slotId, todayStr()]
+      [slotId, todayStr(), nowTime]
     );
     const reservation = resvRes.rows[0];
     if (!reservation) {

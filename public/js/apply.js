@@ -151,24 +151,52 @@ document.getElementById('applyForm').addEventListener('submit', async (e) => {
   btn.disabled = true;
 
   try {
-    // Save the vehicle (tied to the already-logged-in user's session)
-    const { vehicle } = await api('/api/vehicles', {
-      method: 'POST',
-      body: JSON.stringify({
-        plate_no: val('plate_no'), make: val('make'), model: val('model'), year: val('year'),
-        color: val('color'), trim: val('trim'), owner_name: val('owner_name'),
-        owner_address: val('owner_address'), relation_to_applicant: val('relation_to_applicant')
-      })
-    });
+    let vehicleId = null;
+    let vehicleExists = false;
+    const plate_no = val('plate_no');
+    const make = val('make');
+    const model = val('model');
+    const year = val('year');
+    const color = val('color');
+    const trim = val('trim');
+    const owner_name = val('owner_name');
+    const owner_address = val('owner_address');
+    const relation_to_applicant = val('relation_to_applicant');
 
-    // Submit the application with uploaded files
+    try {
+      const { vehicle } = await api('/api/vehicles', {
+        method: 'POST',
+        body: JSON.stringify({
+          plate_no, make, model, year,
+          color, trim, owner_name,
+          owner_address, relation_to_applicant
+        })
+      });
+      vehicleId = vehicle.id;
+    } catch (error) {
+      if (error.message && error.message.includes('already saved to your account')) {
+        vehicleExists = true;
+        const { vehicles } = await api('/api/vehicles');
+        const existing = vehicles.find(v => v.plate_no && v.plate_no.toUpperCase() === plate_no.toUpperCase());
+        if (!existing) throw error;
+        vehicleId = existing.id;
+      } else {
+        throw error;
+      }
+    }
+
     const fd = new FormData();
-    fd.append('vehicle_id', vehicle.id);
+    fd.append('vehicle_id', vehicleId);
     fd.append('rules_acknowledged', document.getElementById('rules_acknowledged').checked);
     Object.entries(files).forEach(([key, file]) => fd.append(key, file));
     await api('/api/applications', { method: 'POST', body: fd });
 
-    okEl.textContent = 'Application submitted. Redirecting to your dashboard...';
+    if (vehicleExists) {
+      okEl.textContent = 'Application submitted with your existing vehicle. Redirecting to your dashboard...';
+    } else {
+      okEl.textContent = 'Application submitted. Redirecting to your dashboard...';
+    }
+
     okEl.style.display = 'block';
     setTimeout(() => (window.location.href = '/dashboard.html'), 1500);
   } catch (err) {

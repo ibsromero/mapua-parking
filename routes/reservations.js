@@ -10,7 +10,7 @@ const {
   isReservationStartInPast,
   GRACE_PERIOD_MINUTES
 } = require('../db/reservationHelpers');
-const { positiveInteger } = require('../middleware/validation');
+const { positiveInteger, hasTimeOverlap } = require('../middleware/validation');
 
 const router = express.Router();
 
@@ -326,12 +326,25 @@ router.post('/:id/extend', requireLogin, async (req, res) => {
     const conflict = await client.query(
       `SELECT id FROM reservations
        WHERE slot_id = $1 AND id != $2 AND reservation_date = $3
-         AND status IN ('ongoing') AND start_time < $4 AND start_time >= $5`,
+         AND status IN ('ongoing')
+         AND start_time < $4 AND end_time > $5`,
       [reservation.slot_id, reservation.id, reservation.reservation_date, newEnd, reservation.end_time]
     );
     if (conflict.rows[0]) {
       await client.query('ROLLBACK');
-      return res.status(409).json({ error: 'Another reservation starts before that extended time. Try a shorter extension.' });
+      return res.status(409).json({ error: 'This extension would overlap another reservation on the same slot. Try a shorter extension.' });
+    }
+
+    const myOverlap = await client.query(
+      `SELECT id FROM reservations
+       WHERE user_id = $1 AND id != $2 AND reservation_date = $3
+         AND status = 'ongoing'
+         AND start_time < $4 AND end_time > $5`,
+      [req.session.user.id, reservation.id, reservation.reservation_date, newEnd, reservation.end_time]
+    );
+    if (myOverlap.rows[0]) {
+      await client.query('ROLLBACK');
+      return res.status(409).json({ error: 'This extension would overlap your own reservation on the same day.' });
     }
 
     const updated = await client.query(

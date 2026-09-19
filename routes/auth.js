@@ -49,7 +49,7 @@ router.post('/register', registerLimiter, async (req, res) => {
   if (!validName(full_name)) {
     return res.status(400).json({ error: 'Full name may contain letters, spaces, hyphens, apostrophes, and periods only.' });
   }
-  if (email && !validMapuaEmail(email)) {
+  if (!email || !validMapuaEmail(email)) {
     return res.status(400).json({ error: 'Email must use @mymail.mapua.edu.ph or @mapua.edu.ph.' });
   }
   if (!APPLICANT_TYPES.includes(applicant_type)) {

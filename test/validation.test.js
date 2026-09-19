@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const {
   validName,
   validMapuaEmail,
+  hasTimeOverlap,
   positiveInteger,
   normalizeRequestBody
 } = require('../middleware/validation');
@@ -33,9 +34,16 @@ test('validMapuaEmail only accepts Mapua email domains', () => {
   assert.equal(validMapuaEmail('student@mymail.mapua.edu.ph'), true);
   assert.equal(validMapuaEmail('faculty@mapua.edu.ph'), true);
   assert.equal(validMapuaEmail('STUDENT@MYMAIL.MAPUA.EDU.PH'), true);
+  assert.equal(validMapuaEmail(''), false);
   assert.equal(validMapuaEmail('student@gmail.com'), false);
   assert.equal(validMapuaEmail('student@fake.mapua.edu.ph'), false);
   assert.equal(validMapuaEmail('student@mymail.mapua.edu.ph.evil.com'), false);
+});
+
+test('hasTimeOverlap checks actual time-range overlap only', () => {
+  assert.equal(hasTimeOverlap('09:00:00', '10:00:00', '10:00:00', '11:00:00'), false);
+  assert.equal(hasTimeOverlap('09:00:00', '10:00:00', '09:30:00', '09:45:00'), true);
+  assert.equal(hasTimeOverlap('09:00:00', '10:00:00', '10:00:01', '11:00:00'), false);
 });
 
 test('positiveInteger rejects partial parses', () => {

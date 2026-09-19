@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const {
   validName,
+  validMapuaEmail,
   positiveInteger,
   normalizeRequestBody
 } = require('../middleware/validation');
@@ -26,6 +27,15 @@ test('validName accepts Unicode letters and rejects empty or oversized input', (
   assert.equal(validName('Élodie Dela Cruz'), true);
   assert.equal(validName('   '), false);
   assert.equal(validName('A'.repeat(151)), false);
+});
+
+test('validMapuaEmail only accepts Mapua email domains', () => {
+  assert.equal(validMapuaEmail('student@mymail.mapua.edu.ph'), true);
+  assert.equal(validMapuaEmail('faculty@mapua.edu.ph'), true);
+  assert.equal(validMapuaEmail('STUDENT@MYMAIL.MAPUA.EDU.PH'), true);
+  assert.equal(validMapuaEmail('student@gmail.com'), false);
+  assert.equal(validMapuaEmail('student@fake.mapua.edu.ph'), false);
+  assert.equal(validMapuaEmail('student@mymail.mapua.edu.ph.evil.com'), false);
 });
 
 test('positiveInteger rejects partial parses', () => {

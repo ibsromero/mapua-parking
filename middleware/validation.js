@@ -1,4 +1,5 @@
 const NAME_RE = /^\p{L}+(?:(?:[ '-]\p{L}+)|(?: \p{L}\.))*$/u;
+const MAPUA_EMAIL_RE = /^[^\s@]+@(?:mymail\.mapua\.edu\.ph|mapua\.edu\.ph)$/i;
 
 function cleanString(value, maxLength) {
   if (typeof value !== 'string') return null;
@@ -10,6 +11,10 @@ function cleanString(value, maxLength) {
 function validName(value, maxLength = 150) {
   const name = cleanString(value, maxLength);
   return Boolean(name && name.length >= 2 && NAME_RE.test(name));
+}
+
+function validMapuaEmail(value) {
+  return typeof value === 'string' && MAPUA_EMAIL_RE.test(value.trim());
 }
 
 function positiveInteger(value) {
@@ -31,4 +36,4 @@ function normalizeRequestBody(req, res, next) {
   next();
 }
 
-module.exports = { cleanString, validName, positiveInteger, normalizeRequestBody };
+module.exports = { cleanString, validName, validMapuaEmail, positiveInteger, normalizeRequestBody };

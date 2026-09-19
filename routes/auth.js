@@ -3,14 +3,12 @@ const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const pool = require('../db/pool');
 const { csrfToken } = require('../middleware/csrf');
-const { cleanString, validName } = require('../middleware/validation');
+const { cleanString, validName, validMapuaEmail } = require('../middleware/validation');
 
 const router = express.Router();
 
 const ID_RE = /^[A-Za-z0-9-]{4,20}$/;
 const APPLICANT_TYPES = ['student', 'faculty', 'non_teaching'];
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
 function clean(val, max) {
   if (typeof val !== 'string') return null;
   const trimmed = val.trim().slice(0, max);
@@ -51,7 +49,9 @@ router.post('/register', registerLimiter, async (req, res) => {
   if (!validName(full_name)) {
     return res.status(400).json({ error: 'Full name may contain letters, spaces, hyphens, apostrophes, and periods only.' });
   }
-  if (email && !EMAIL_RE.test(email)) return res.status(400).json({ error: 'Email address is invalid.' });
+  if (email && !validMapuaEmail(email)) {
+    return res.status(400).json({ error: 'Email must use @mymail.mapua.edu.ph or @mapua.edu.ph.' });
+  }
   if (!APPLICANT_TYPES.includes(applicant_type)) {
     return res.status(400).json({ error: 'Applicant type is invalid.' });
   }

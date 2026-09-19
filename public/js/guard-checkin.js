@@ -7,6 +7,8 @@ function stopScanner() {
   if (scannerStream) scannerStream.getTracks().forEach(track => track.stop());
   scannerStream = null;
   const video = document.getElementById('qrVideo');
+  video.pause();
+  video.srcObject = null;
   video.hidden = true;
   document.getElementById('startScanner').disabled = false;
 }
@@ -14,19 +16,24 @@ function stopScanner() {
 async function scanQrCode() {
   const status = document.getElementById('scannerStatus');
   const video = document.getElementById('qrVideo');
-  if (!('BarcodeDetector' in window)) {
-    status.textContent = 'Camera QR scanning is not supported in this browser. Enter the token below.';
+  if (!navigator.mediaDevices?.getUserMedia) {
+    status.textContent = 'Camera access requires a secure connection. Enter the token below.';
     return;
   }
 
+  document.getElementById('startScanner').disabled = true;
   try {
-    const detector = new BarcodeDetector({ formats: ['qr_code'] });
     scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
     video.srcObject = scannerStream;
     video.hidden = false;
     await video.play();
     scannerRunning = true;
-    document.getElementById('startScanner').disabled = true;
+    if (!('BarcodeDetector' in window)) {
+      status.textContent = 'Camera preview is active. QR scanning is not supported in this browser; enter the token below.';
+      return;
+    }
+
+    const detector = new BarcodeDetector({ formats: ['qr_code'] });
     status.textContent = 'Point the camera at a permit QR code.';
 
     const scanFrame = async () => {

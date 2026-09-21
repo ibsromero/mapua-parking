@@ -10,7 +10,9 @@ const {
   ticketNumber,
   phtTodayStr,
   phtTimeStr,
-  GRACE_PERIOD_MINUTES
+  GRACE_PERIOD_MINUTES,
+  recordLateArrival,
+  isLateArrival
 } = require('../db/reservationHelpers');
 
 const router = express.Router();
@@ -31,7 +33,7 @@ router.get('/overview', requireAdmin, async (req, res) => {
     const today = phtTodayStr();
     const nowTime = phtTimeStr();
 
-    const [occupancy, active, pending, recent] = await Promise.all([
+    const [occupancy, active, pending, penalties, recent] = await Promise.all([
       pool.query(
         `SELECT COUNT(*) AS total,
           COUNT(*) FILTER (
@@ -47,6 +49,7 @@ router.get('/overview', requireAdmin, async (req, res) => {
       ),
       pool.query(`SELECT COUNT(*) AS count FROM reservations WHERE status = 'ongoing'`),
       pool.query(`SELECT COUNT(*) AS count FROM sticker_applications WHERE status = 'pending'`),
+      pool.query(`SELECT COUNT(*) AS count FROM users WHERE late_arrival_penalty_until IS NOT NULL AND late_arrival_penalty_until > NOW()`),
       pool.query(`SELECT * FROM entry_exit_logs ORDER BY logged_at DESC LIMIT 10`)
     ]);
     const occ = occupancy.rows[0];
@@ -56,6 +59,7 @@ router.get('/overview', requireAdmin, async (req, res) => {
       slots_total: Number(occ.total),
       active_reservations: Number(active.rows[0].count),
       pending_applications: Number(pending.rows[0].count),
+      active_penalties: Number(penalties.rows[0].count),
       recent_activity: recent.rows
     });
   } catch (err) {
@@ -132,6 +136,78 @@ router.get('/today-reservations', requireGuardOrAdmin, async (req, res) => {
   }
 });
 
+// GET /api/admin/guard/id/:idNumber -> identify a Mapua ID for the guard
+// portal and return only the gate-relevant information for today's visit.
+router.get('/guard/id/:idNumber', requireGuardOrAdmin, async (req, res) => {
+  const idNumber = String(req.params.idNumber || '').trim();
+  if (!/^[A-Za-z0-9-]{4,20}$/.test(idNumber)) {
+    return res.status(400).json({ error: 'Invalid Mapúa ID number.' });
+  }
+
+  try {
+    const userResult = await pool.query(
+      `SELECT id, id_number, full_name, applicant_type, student_status, program,
+              late_arrival_count, late_arrival_penalty_until
+       FROM users WHERE id_number = $1`,
+      [idNumber]
+    );
+    const user = userResult.rows[0];
+    if (!user) return res.status(404).json({ error: 'No Mapúa account was found for that ID.' });
+
+    const [reservationsResult, vehiclesResult] = await Promise.all([
+      pool.query(
+        `SELECT r.id, r.status, r.checked_in_at, r.start_time, r.end_time,
+                r.reservation_date, s.slot_number, l.name AS lot_name,
+                v.plate_no, v.make, v.model
+         FROM reservations r
+         JOIN parking_slots s ON s.id = r.slot_id
+         JOIN parking_lots l ON l.id = s.lot_id
+         LEFT JOIN vehicles v ON v.id = r.vehicle_id
+         WHERE r.user_id = $1 AND r.reservation_date = $2
+           AND r.status IN ('ongoing', 'completed', 'forfeited')
+         ORDER BY r.start_time`,
+        [user.id, todayStr()]
+      ),
+      pool.query(
+        `SELECT v.id, v.plate_no, v.make, v.model, v.color,
+                EXISTS (
+                  SELECT 1 FROM sticker_applications a
+                  WHERE a.vehicle_id = v.id AND a.status = 'approved'
+                ) AS has_approved_sticker
+         FROM vehicles v WHERE v.user_id = $1 ORDER BY v.plate_no`,
+        [user.id]
+      )
+    ]);
+
+    const reservations = reservationsResult.rows.map((reservation) => ({
+      ...reservation,
+      ticket_number: ticketNumber(reservation.id),
+      arrival_status: arrivalStatus(
+        reservation.checked_in_at,
+        reservation.reservation_date,
+        reservation.start_time
+      )
+    }));
+
+    res.json({
+      student: {
+        id_number: user.id_number,
+        full_name: user.full_name,
+        applicant_type: user.applicant_type,
+        student_status: user.student_status,
+        program: user.program,
+        late_arrival_count: user.late_arrival_count,
+        late_arrival_penalty_until: user.late_arrival_penalty_until
+      },
+      reservations,
+      vehicles: vehiclesResult.rows
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to read this Mapúa ID.' });
+  }
+});
+
 // POST /api/admin/slots/:slotId/status  { status: 'available' | 'maintenance' }
 router.post('/slots/:slotId/status', requireAdmin, async (req, res) => {
   const { status } = req.body;
@@ -196,7 +272,7 @@ router.post('/slots/:slotId/entry', requireGuardOrAdmin, async (req, res) => {
     await client.query('BEGIN');
     const nowTime = phtTimeStr();
     const resvRes = await client.query(
-      `SELECT r.id, r.reservation_date, r.start_time, v.plate_no FROM reservations r
+      `SELECT r.id, r.user_id, r.reservation_date, r.start_time, v.plate_no FROM reservations r
        LEFT JOIN vehicles v ON v.id = r.vehicle_id
        WHERE r.slot_id = $1 AND r.status = 'ongoing' AND r.reservation_date = $2
          AND r.checked_in_at IS NULL AND r.start_time <= $3 AND r.end_time > $3
@@ -216,11 +292,17 @@ router.post('/slots/:slotId/entry', requireGuardOrAdmin, async (req, res) => {
       [reservation.id, reservation.plate_no]
     );
 
+    let lateArrival = null;
+    if (isLateArrival(checkedInAt, reservation.reservation_date, reservation.start_time)) {
+      lateArrival = await recordLateArrival(client, reservation.user_id);
+    }
+
     await client.query('COMMIT');
     res.json({
       ok: true,
       ticket_number: ticketNumber(reservation.id),
-      arrival_status: arrivalStatus(checkedInAt, reservation.reservation_date, reservation.start_time)
+      arrival_status: arrivalStatus(checkedInAt, reservation.reservation_date, reservation.start_time),
+      late_arrival: lateArrival ? { count: lateArrival.count, penalty_until: lateArrival.penaltyUntil } : null
     });
   } catch (err) {
     await client.query('ROLLBACK');

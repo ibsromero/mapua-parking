@@ -15,14 +15,18 @@ async function loadApps(status) {
     rowsEl.innerHTML = '<tr><td colspan="8" class="muted">No applications found.</td></tr>';
     return;
   }
-  rowsEl.innerHTML = applications.map(a => `
+  rowsEl.innerHTML = applications.map(a => {
+    const studentStatus = a.applicant_type === 'student' ? (a.student_status === 'graduate_student' ? 'Graduate student' : 'Currently enrolled') : '-';
+    const program = a.applicant_type === 'student' ? (a.program || a.course_year || '-') : '-';
+    return `
     <tr>
       <td>${esc(a.applicant_name)}</td>
       <td>${esc(a.id_number)}</td>
-      <td>${esc((a.applicant_type || '').replace('_', '-'))}</td>
+      <td>${esc((a.applicant_type || '').replace('_', '-'))}<br><span class="muted" style="font-size:12px;">${esc(studentStatus)}</span></td>
       <td>${esc(a.make || '')} ${esc(a.model || '')}</td>
       <td>${esc(a.plate_no || '-')}</td>
       <td>
+        ${a.applicant_type === 'student' ? `<div class="muted" style="font-size:12px; margin-bottom:6px;">Program: ${esc(program)}</div>` : ''}
         ${a.or_cr_file ? docLink(a.id, 'or_cr_file', 'OR/CR') : '<span class="muted" style="font-size:12px;">OR/CR: none</span>'}
         ${a.drivers_license_file ? docLink(a.id, 'drivers_license_file', "Driver's License") : '<span class="muted" style="font-size:12px;">License: none</span>'}
         ${a.university_id_file ? docLink(a.id, 'university_id_file', 'University ID') : '<span class="muted" style="font-size:12px;">ID: none</span>'}
@@ -37,7 +41,8 @@ async function loadApps(status) {
           <button class="btn btn-primary" style="padding:6px 10px;font-size:12px;" data-decide-id="${a.id}" data-decision="approved">Approve</button>
         ` : '<span class="muted" style="font-size:12px;">Reviewed</span>'}
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 async function decide(id, decision) {

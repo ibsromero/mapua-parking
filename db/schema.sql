@@ -8,10 +8,15 @@ CREATE TABLE IF NOT EXISTS users (
   contact_no VARCHAR(30),
   address TEXT,
   applicant_type VARCHAR(20) NOT NULL DEFAULT 'student', -- student | faculty | non_teaching
-  course_year VARCHAR(100),                    -- if student
+  student_status VARCHAR(30),                  -- current_student | graduate_student
+  program VARCHAR(100),                        -- if student, used for academic program or major
+  course_year VARCHAR(100),                    -- legacy/temporary field retained for existing data
   school_dept VARCHAR(100),                    -- if faculty/employee
   password_hash VARCHAR(255) NOT NULL,
   role VARCHAR(20) NOT NULL DEFAULT 'user',    -- user | admin | guard
+  late_arrival_count INTEGER NOT NULL DEFAULT 0,
+  late_arrival_reset_at TIMESTAMP,
+  late_arrival_penalty_until TIMESTAMP,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 

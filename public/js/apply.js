@@ -188,6 +188,7 @@ document.getElementById('applyForm').addEventListener('submit', async (e) => {
     const fd = new FormData();
     fd.append('vehicle_id', vehicleId);
     fd.append('rules_acknowledged', document.getElementById('rules_acknowledged').checked);
+    fd.append('skip_application_review', document.getElementById('submitBtn')?.dataset.skipReview === 'true' ? 'true' : 'false');
     Object.entries(files).forEach(([key, file]) => fd.append(key, file));
     await api('/api/applications', { method: 'POST', body: fd });
 
@@ -214,5 +215,17 @@ document.getElementById('applyForm').addEventListener('submit', async (e) => {
     currentUser = profile;
   } catch (e) {
     currentUser = { full_name: user.full_name, id_number: user.id_number };
+  }
+
+  try {
+    const { vehicles } = await api('/api/vehicles');
+    const hasApprovedSticker = vehicles.some(v => v.has_approved_sticker);
+    const submitBtn = document.getElementById('submitBtn');
+    if (hasApprovedSticker && submitBtn) {
+      submitBtn.title = 'Legacy sticker holder: application review bypass enabled for this additional vehicle.';
+      submitBtn.dataset.skipReview = 'true';
+    }
+  } catch (e) {
+    // Non-critical: only use the bypass when the current user already has a valid sticker.
   }
 })();

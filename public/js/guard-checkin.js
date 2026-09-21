@@ -1,6 +1,7 @@
 let allReservations = [];
 let scannerStream = null;
 let scannerRunning = false;
+let nfcAbortController = null;
 
 function stopScanner() {
   scannerRunning = false;
@@ -80,6 +81,105 @@ document.getElementById('verifyForm').addEventListener('submit', async (event) =
       <span class="verify-line">${esc(err.message)}</span>
     </div>`;
   }
+});
+
+function decodeNfcRecord(record) {
+  if (!record?.data) return '';
+  try {
+    const bytes = new Uint8Array(record.data.buffer, record.data.byteOffset, record.data.byteLength);
+    if (record.recordType === 'text' && bytes.length) {
+      const languageLength = bytes[0] & 0x3f;
+      return new TextDecoder().decode(bytes.slice(1 + languageLength)).trim();
+    }
+    return new TextDecoder().decode(bytes).replace(/^\u0000/, '').trim();
+  } catch (_) {
+    return '';
+  }
+}
+
+function extractMapuaId(value) {
+  const text = String(value || '').trim();
+  const labeled = text.match(/(?:mapua\s*)?(?:id|student\s*id)\s*[:#-]?\s*([A-Za-z0-9-]{4,20})/i);
+  if (labeled) return labeled[1];
+  return /^[A-Za-z0-9-]{4,20}$/.test(text) ? text : '';
+}
+
+async function lookupMapuaId(id) {
+  const result = document.getElementById('idLookupResult');
+  const status = document.getElementById('nfcStatus');
+  result.innerHTML = '<p class="muted">Reading student record...</p>';
+  try {
+    const data = await api(`/api/admin/guard/id/${encodeURIComponent(id)}`);
+    const student = data.student;
+    const statusLabel = student.student_status === 'graduate_student' ? 'Graduate student' :
+      student.student_status === 'current_student' ? 'Currently enrolled' : 'Employee';
+    const penalty = student.late_arrival_penalty_until
+      ? `<span class="badge badge-cancelled">Parking suspended until ${esc(new Date(student.late_arrival_penalty_until).toLocaleString())}</span>`
+      : '';
+    const reservations = data.reservations.length
+      ? data.reservations.map((reservation) => `<li>${esc(reservation.ticket_number)} · ${esc(reservation.lot_name)} ${esc(reservation.slot_number)} · ${esc((reservation.start_time || '').slice(0, 5))}-${esc((reservation.end_time || '').slice(0, 5))} · ${esc(reservation.status)}</li>`).join('')
+      : '<li>No reservation for today.</li>';
+    const vehicles = data.vehicles.length
+      ? data.vehicles.map((vehicle) => `<li>${esc([vehicle.plate_no, vehicle.make, vehicle.model].filter(Boolean).join(' '))} ${vehicle.has_approved_sticker ? '<span class="badge badge-approved">Sticker approved</span>' : '<span class="badge badge-cancelled">No approved sticker</span>'}</li>`).join('')
+      : '<li>No vehicles registered.</li>';
+    result.innerHTML = `<div class="alert alert-info verify-alert">
+      <strong>${esc(student.full_name)} · ${esc(student.id_number)}</strong>
+      <span class="verify-line">${esc(statusLabel)}${student.program ? ` · ${esc(student.program)}` : ''}</span>
+      ${penalty}
+      <span class="verify-line"><strong>Today’s reservations</strong></span><ul>${reservations}</ul>
+      <span class="verify-line"><strong>Registered vehicles</strong></span><ul>${vehicles}</ul>
+    </div>`;
+    status.textContent = `ID ${student.id_number} recognized.`;
+  } catch (err) {
+    result.innerHTML = `<div class="alert alert-warning verify-alert"><strong>ID not recognized</strong><span class="verify-line">${esc(err.message)}</span></div>`;
+    status.textContent = 'Scan another card or enter the ID manually.';
+  }
+}
+
+async function startNfcScan() {
+  const status = document.getElementById('nfcStatus');
+  const button = document.getElementById('startNfcScan');
+  if (!window.isSecureContext || !('NDEFReader' in window)) {
+    status.textContent = 'Web NFC is unavailable here. Use HTTPS on a supported Android browser or enter the ID manually.';
+    return;
+  }
+
+  nfcAbortController?.abort();
+  nfcAbortController = new AbortController();
+  button.disabled = true;
+  try {
+    const reader = new NDEFReader();
+    reader.onreadingerror = () => {
+      status.textContent = 'The NFC card could not be read. Hold it near the reader and try again.';
+    };
+    reader.onreading = async ({ message }) => {
+      const values = Array.from(message.records || []).map(decodeNfcRecord);
+      const id = values.map(extractMapuaId).find(Boolean);
+      if (!id) {
+        status.textContent = 'Card detected, but it does not contain a readable Mapúa ID number.';
+        return;
+      }
+      document.getElementById('mapuaId').value = id;
+      await lookupMapuaId(id);
+      nfcAbortController.abort();
+      button.disabled = false;
+      status.textContent = `NFC scan complete for ${id}.`;
+    };
+    await reader.scan({ signal: nfcAbortController.signal });
+    status.textContent = 'NFC reader ready. Hold the Mapúa ID near the device.';
+  } catch (err) {
+    button.disabled = false;
+    status.textContent = err.name === 'NotAllowedError'
+      ? 'NFC permission was denied. Enter the ID manually.'
+      : 'Could not start NFC. Use a supported HTTPS device or enter the ID manually.';
+  }
+}
+
+document.getElementById('startNfcScan').addEventListener('click', startNfcScan);
+document.getElementById('idLookupForm').addEventListener('submit', (event) => {
+  event.preventDefault();
+  const id = extractMapuaId(document.getElementById('mapuaId').value);
+  if (id) lookupMapuaId(id);
 });
 
 function badgeClass(status) {

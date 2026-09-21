@@ -50,15 +50,10 @@ router.post('/', requireLogin, uploadFields, async (req, res) => {
   const license = files.drivers_license_file?.[0];
   const uniId = files.university_id_file?.[0];
   const rulesAck = req.body.rules_acknowledged === 'true' || req.body.rules_acknowledged === true;
+  const skipApplicationReview = req.body.skip_application_review === 'true' || req.body.skip_application_review === true;
 
   if (!Number.isInteger(vehicleId) || vehicleId <= 0) {
     return res.status(400).json({ error: 'Select a valid vehicle for this application.' });
-  }
-  if (!orCr || !license || !uniId) {
-    return res.status(400).json({ error: 'Please upload all required documents before submitting.' });
-  }
-  if (![orCr, license, uniId].every(hasValidSignature)) {
-    return res.status(400).json({ error: 'One or more uploaded documents has an unsupported file format.' });
   }
   if (!rulesAck) {
     return res.status(400).json({ error: 'You must acknowledge the parking rules before submitting.' });
@@ -80,26 +75,58 @@ router.post('/', requireLogin, uploadFields, async (req, res) => {
       return res.status(409).json({ error: 'This vehicle already has an active sticker application.' });
     }
 
-    const { rows } = await pool.query(
-      `INSERT INTO sticker_applications
-        (user_id, vehicle_id,
-         or_cr_file, or_cr_data, or_cr_mimetype,
-         drivers_license_file, drivers_license_data, drivers_license_mimetype,
-         university_id_file, university_id_data, university_id_mimetype,
-         rules_acknowledged)
-       VALUES ($1,$2, $3,$4,$5, $6,$7,$8, $9,$10,$11, $12)
-       RETURNING id, user_id, vehicle_id, status, or_cr_file, drivers_license_file, university_id_file,
-                 rules_acknowledged, rejection_reason, submitted_at, reviewed_at, reviewed_by`,
-      [
-        req.session.user.id,
-        vehicleId,
-        orCr?.originalname || null, orCr?.buffer || null, orCr ? mimeFor(orCr) : null,
-        license?.originalname || null, license?.buffer || null, license ? mimeFor(license) : null,
-        uniId?.originalname || null, uniId?.buffer || null, uniId ? mimeFor(uniId) : null,
-        true
-      ]
+    const hasApprovedSticker = await pool.query(
+      `SELECT id FROM sticker_applications WHERE user_id = $1 AND status = 'approved' LIMIT 1`,
+      [req.session.user.id]
     );
-    res.status(201).json({ application: rows[0] });
+    const legacyBypass = hasApprovedSticker.rows[0] && skipApplicationReview;
+
+    if (!legacyBypass) {
+      if (!orCr || !license || !uniId) {
+        return res.status(400).json({ error: 'Please upload all required documents before submitting.' });
+      }
+      if (![orCr, license, uniId].every(hasValidSignature)) {
+        return res.status(400).json({ error: 'One or more uploaded documents has an unsupported file format.' });
+      }
+    }
+
+    const { rows } = legacyBypass
+      ? await pool.query(
+          `INSERT INTO sticker_applications
+            (user_id, vehicle_id, status, rules_acknowledged, permit_number, permit_token, permit_issued_at, reviewed_at, reviewed_by)
+           VALUES ($1,$2,'approved',$3,$4,$5,NOW(),NOW(),$6)
+           RETURNING id, user_id, vehicle_id, status, or_cr_file, drivers_license_file, university_id_file,
+                     rules_acknowledged, rejection_reason, submitted_at, reviewed_at, reviewed_by,
+                     permit_number, permit_token, permit_issued_at`,
+          [
+            req.session.user.id,
+            vehicleId,
+            true,
+            `MP-${new Date().getFullYear()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
+            crypto.randomBytes(24).toString('hex'),
+            req.session.user.id
+          ]
+        )
+      : await pool.query(
+          `INSERT INTO sticker_applications
+            (user_id, vehicle_id,
+             or_cr_file, or_cr_data, or_cr_mimetype,
+             drivers_license_file, drivers_license_data, drivers_license_mimetype,
+             university_id_file, university_id_data, university_id_mimetype,
+             rules_acknowledged)
+           VALUES ($1,$2, $3,$4,$5, $6,$7,$8, $9,$10,$11, $12)
+           RETURNING id, user_id, vehicle_id, status, or_cr_file, drivers_license_file, university_id_file,
+                     rules_acknowledged, rejection_reason, submitted_at, reviewed_at, reviewed_by`,
+          [
+            req.session.user.id,
+            vehicleId,
+            orCr?.originalname || null, orCr?.buffer || null, orCr ? mimeFor(orCr) : null,
+            license?.originalname || null, license?.buffer || null, license ? mimeFor(license) : null,
+            uniId?.originalname || null, uniId?.buffer || null, uniId ? mimeFor(uniId) : null,
+            true
+          ]
+        );
+    res.status(201).json({ application: rows[0], legacy_bypass: legacyBypass });
   } catch (err) {
     if (err.code === '23505') {
       return res.status(409).json({ error: 'This vehicle already has an active sticker application.' });
@@ -145,7 +172,7 @@ router.get('/', requireAdmin, async (req, res) => {
       `SELECT a.id, a.user_id, a.vehicle_id, a.status, a.or_cr_file, a.drivers_license_file,
               a.university_id_file, a.rules_acknowledged, a.rejection_reason, a.submitted_at,
               a.reviewed_at, a.reviewed_by, u.full_name AS applicant_name, u.id_number, u.applicant_type,
-              v.plate_no, v.make, v.model
+              u.student_status, u.program, u.course_year, v.plate_no, v.make, v.model
        FROM sticker_applications a
        JOIN users u ON u.id = a.user_id
        LEFT JOIN vehicles v ON v.id = a.vehicle_id

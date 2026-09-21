@@ -6,8 +6,10 @@
 // routes rather than a background cron job, since Render's free tier can
 // sleep and a timer-based job wouldn't reliably fire anyway.
 
-const GRACE_PERIOD_MINUTES = 20;
+const GRACE_PERIOD_MINUTES = 10;
 const ON_TIME_TOLERANCE_MINUTES = 10;
+const LATE_ARRIVAL_LIMIT_PER_30_DAYS = 2;
+const LATE_ARRIVAL_PENALTY_DAYS = 30;
 
 // The whole system is one campus in the Philippines (UTC+8, no DST), but
 // Render's server clock runs in UTC. Every reservation_date/start_time/
@@ -80,6 +82,14 @@ function toISODateStr(d) {
 // Classifies how an arrival compares to the reserved start time. The
 // explicit +08:00 offset is what makes this parse as the correct absolute
 // instant regardless of the server's own local timezone setting.
+function isLateArrival(checkedInAt, reservationDate, startTime, gracePeriodMinutes = GRACE_PERIOD_MINUTES) {
+  if (!checkedInAt) return false;
+  const scheduled = new Date(`${toISODateStr(reservationDate)}T${startTime}${PH_OFFSET}`);
+  const checkedIn = new Date(checkedInAt);
+  const diffMinutes = (checkedIn - scheduled) / 60000;
+  return diffMinutes > gracePeriodMinutes;
+}
+
 function arrivalStatus(checkedInAt, reservationDate, startTime) {
   if (!checkedInAt) return null;
   const scheduled = new Date(`${toISODateStr(reservationDate)}T${startTime}${PH_OFFSET}`);
@@ -103,13 +113,50 @@ function ticketNumber(id) {
   return `MPU-${String(id).padStart(6, '0')}`;
 }
 
+async function recordLateArrival(pool, userId) {
+  const now = new Date();
+  const { rows } = await pool.query(
+    `SELECT late_arrival_count, late_arrival_reset_at, late_arrival_penalty_until
+     FROM users WHERE id = $1`,
+    [userId]
+  );
+
+  const current = rows[0] || {};
+  const resetAt = current.late_arrival_reset_at ? new Date(current.late_arrival_reset_at) : now;
+  let count = Number(current.late_arrival_count || 0);
+
+  if (!current.late_arrival_reset_at || now - resetAt > (LATE_ARRIVAL_PENALTY_DAYS * 24 * 60 * 60 * 1000)) {
+    count = 0;
+  }
+
+  count += 1;
+  const penaltyUntil = count >= LATE_ARRIVAL_LIMIT_PER_30_DAYS
+    ? new Date(now.getTime() + (LATE_ARRIVAL_PENALTY_DAYS * 24 * 60 * 60 * 1000))
+    : null;
+
+  await pool.query(
+    `UPDATE users
+     SET late_arrival_count = $1,
+         late_arrival_reset_at = $2,
+         late_arrival_penalty_until = $3
+     WHERE id = $4`,
+    [count, now, penaltyUntil, userId]
+  );
+
+  return { count, penaltyUntil };
+}
+
 module.exports = {
   sweepExpiredReservations,
   arrivalStatus,
   departureStatus,
+  isLateArrival,
+  recordLateArrival,
   ticketNumber,
   phtTodayStr,
   phtTimeStr,
   isReservationStartInPast,
-  GRACE_PERIOD_MINUTES
+  GRACE_PERIOD_MINUTES,
+  LATE_ARRIVAL_LIMIT_PER_30_DAYS,
+  LATE_ARRIVAL_PENALTY_DAYS
 };

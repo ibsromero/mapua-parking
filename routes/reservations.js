@@ -10,6 +10,7 @@ const {
   isReservationStartInPast,
   GRACE_PERIOD_MINUTES
 } = require('../db/reservationHelpers');
+const { recordLateArrival, isLateArrival } = require('../db/reservationHelpers');
 const { positiveInteger, hasTimeOverlap } = require('../middleware/validation');
 
 const router = express.Router();
@@ -142,6 +143,17 @@ router.post('/', requireLogin, async (req, res) => {
   ]);
   if (!owned.rows[0]) return res.status(403).json({ error: 'That vehicle does not belong to you.' });
 
+  const userPenalty = await pool.query(
+    `SELECT late_arrival_penalty_until FROM users WHERE id = $1`,
+    [req.session.user.id]
+  );
+  const penaltyUntil = userPenalty.rows[0]?.late_arrival_penalty_until
+    ? new Date(userPenalty.rows[0].late_arrival_penalty_until)
+    : null;
+  if (penaltyUntil && penaltyUntil > new Date()) {
+    return res.status(403).json({ error: 'Parking privileges are temporarily suspended because of repeated late arrivals. Please try again later.' });
+  }
+
   const approvedSticker = await pool.query(
     `SELECT id FROM sticker_applications WHERE vehicle_id = $1 AND user_id = $2 AND status = 'approved'`,
     [vId, req.session.user.id]
@@ -244,6 +256,9 @@ router.get('/active', requireLogin, async (req, res) => {
           arrival_status: arrivalStatus(rows[0].checked_in_at, rows[0].reservation_date, rows[0].start_time)
         }
       : null;
+    if (reservation && reservation.checked_in_at) {
+      reservation.is_late = isLateArrival(reservation.checked_in_at, reservation.reservation_date, reservation.start_time);
+    }
     res.json({ reservation, grace_period_minutes: GRACE_PERIOD_MINUTES });
   } catch (err) {
     console.error(err);

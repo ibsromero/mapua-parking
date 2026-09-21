@@ -7,7 +7,12 @@ const {
   positiveInteger,
   normalizeRequestBody
 } = require('../middleware/validation');
-const { isReservationStartInPast } = require('../db/reservationHelpers');
+const {
+  isReservationStartInPast,
+  GRACE_PERIOD_MINUTES,
+  LATE_ARRIVAL_LIMIT_PER_30_DAYS,
+  isLateArrival
+} = require('../db/reservationHelpers');
 
 test('validName accepts normal names and common separators', () => {
   assert.equal(validName('Maria Dela Cruz'), true);
@@ -76,4 +81,11 @@ test('isReservationStartInPast handles dates and same-day times consistently', (
   assert.equal(isReservationStartInPast('2026-09-17', '08:00:00', '2026-09-17', '08:00:01'), true);
   assert.equal(isReservationStartInPast('2026-09-17', '08:01:00', '2026-09-17', '08:00:59'), false);
   assert.equal(isReservationStartInPast('2026-09-18', '00:00:00', '2026-09-17', '23:59:59'), false);
+});
+
+test('grace window and late-arrival policy use the current campus rules', () => {
+  assert.equal(GRACE_PERIOD_MINUTES, 10);
+  assert.equal(LATE_ARRIVAL_LIMIT_PER_30_DAYS, 2);
+  assert.equal(isLateArrival('2026-09-17T08:11:00+08:00', '2026-09-17', '08:00:00', 10), true);
+  assert.equal(isLateArrival('2026-09-17T08:09:00+08:00', '2026-09-17', '08:00:00', 10), false);
 });

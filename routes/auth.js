@@ -9,6 +9,7 @@ const router = express.Router();
 
 const ID_RE = /^[A-Za-z0-9-]{4,20}$/;
 const APPLICANT_TYPES = ['student', 'faculty', 'non_teaching'];
+const STUDENT_STATUSES = ['current_student', 'graduate_student'];
 function clean(val, max) {
   if (typeof val !== 'string') return null;
   const trimmed = val.trim().slice(0, max);
@@ -36,7 +37,9 @@ router.post('/register', registerLimiter, async (req, res) => {
   const contact_no = clean(req.body.contact_no, 30);
   const address = clean(req.body.address, 200);
   const applicant_type = clean(req.body.applicant_type, 20) || 'student';
-  const course_year = clean(req.body.course_year, 100);
+  const student_status = clean(req.body.student_status, 30);
+  const program = clean(req.body.program, 100) || clean(req.body.course_year, 100);
+  const course_year = program;
   const password = typeof req.body.password === 'string' ? req.body.password : '';
 
   if (!id_number) {
@@ -55,6 +58,17 @@ router.post('/register', registerLimiter, async (req, res) => {
   if (!APPLICANT_TYPES.includes(applicant_type)) {
     return res.status(400).json({ error: 'Applicant type is invalid.' });
   }
+  if (applicant_type === 'student') {
+    if (!STUDENT_STATUSES.includes(student_status)) {
+      return res.status(400).json({ error: 'Please indicate whether the student is currently enrolled or a graduate student.' });
+    }
+    if (!program) {
+      return res.status(400).json({ error: 'Program is required for students.' });
+    }
+  }
+  if (applicant_type !== 'student' && student_status) {
+    return res.status(400).json({ error: 'Student status is only for student accounts.' });
+  }
   if (!password) {
     return res.status(400).json({ error: 'Password is required.' });
   }
@@ -70,9 +84,9 @@ router.post('/register', registerLimiter, async (req, res) => {
 
     const password_hash = await bcrypt.hash(password, 12);
     const { rows } = await pool.query(
-      `INSERT INTO users (id_number, full_name, email, contact_no, address, applicant_type, course_year, password_hash, role)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'user') RETURNING id, id_number, full_name, role`,
-      [id_number, full_name, email, contact_no, address, applicant_type, course_year, password_hash]
+      `INSERT INTO users (id_number, full_name, email, contact_no, address, applicant_type, student_status, program, course_year, password_hash, role)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'user') RETURNING id, id_number, full_name, role`,
+      [id_number, full_name, email, contact_no, address, applicant_type, applicant_type === 'student' ? student_status : null, program, course_year, password_hash]
     );
     const user = rows[0];
 
@@ -149,7 +163,7 @@ router.get('/profile', async (req, res) => {
   if (!req.session.user) return res.status(401).json({ error: 'Not logged in.' });
   try {
     const { rows } = await pool.query(
-      `SELECT id_number, full_name, email, contact_no, address, applicant_type, course_year, school_dept
+      `SELECT id_number, full_name, email, contact_no, address, applicant_type, student_status, program, course_year, school_dept
        FROM users WHERE id = $1`,
       [req.session.user.id]
     );

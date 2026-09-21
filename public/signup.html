@@ -41,9 +41,17 @@
       <div class="grid-2">
         <div class="field course-year-fields">
           <div>
-            <label for="course">Course (if student)</label>
-            <select id="course">
-              <option value="">Select your course</option>
+            <label for="student_status">Student status</label>
+            <select id="student_status">
+              <option value="">Select status</option>
+              <option value="current_student">Currently enrolled</option>
+              <option value="graduate_student">Graduate student</option>
+            </select>
+          </div>
+          <div>
+            <label for="program">Program</label>
+            <select id="program">
+              <option value="">Select your program</option>
               <optgroup label="Architecture and Design">
                 <option>BS Architecture</option>
                 <option>BS Interior Design</option>
@@ -78,17 +86,6 @@
                 <option>BS Psychology</option>
               </optgroup>
               <option>Other Mapúa program</option>
-            </select>
-          </div>
-          <div>
-            <label for="year_level">Year level (if student)</label>
-            <select id="year_level">
-              <option value="">Select your year</option>
-              <option>1st Year</option>
-              <option>2nd Year</option>
-              <option>3rd Year</option>
-              <option>4th Year</option>
-              <option>5th Year</option>
             </select>
           </div>
         </div>
